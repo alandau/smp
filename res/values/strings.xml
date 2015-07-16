@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Folder Media Player</string>
+    <string-array name="pref_duckVolume_entries">
+        <item>Same volume</item>
+        <item>75%</item>
+        <item>50%</item>
+        <item>25%</item>
+        <item>Silence</item>
+    </string-array>
+    <string-array name="pref_duckVolume_values">
+        <item>100</item>
+        <item>75</item>
+        <item>50</item>
+        <item>25</item>
+        <item>0</item>
+    </string-array>
+</resources>
