@@ -47,6 +47,19 @@ public class MetadataUtils {
         return maybeTransliterate(prefs, getAlbum(prefs, song));
     }
 
+    public static String formatTime(int timeMs) {
+        int time = (timeMs + 999) / 1000;   // sec, round up
+        String sec = String.format("%02d", time % 60);
+        time /= 60;  // min
+        String min = String.format("%02d", time % 60);
+        time /= 60;  // hour
+        String hour = "";
+        if (time != 0) {
+            hour = String.valueOf(time) + ":";
+        }
+        return hour + min + ":" + sec;
+    }
+
     private static Map<Character, String> transliterationMap = new HashMap<Character, String>();
 
     static {

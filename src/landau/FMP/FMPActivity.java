@@ -8,11 +8,16 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
@@ -26,6 +31,21 @@ public class FMPActivity extends Activity {
 
     private FMPService service;
     private SharedPreferences prefs;
+    private GestureDetector gestureDetector;
+    private Handler handler = new Handler();
+    private SeekBar seekBar;
+    private TextView timeLabel;
+    private Runnable seekbarUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if (service != null) {
+                seekBar.setProgress(service.getCurrentTime() / 1000);
+                timeLabel.setText(String.format("%s / %s", MetadataUtils.formatTime(service.getCurrentTime() / 1000 * 1000),
+                        MetadataUtils.formatTime(service.getDuration())));
+                handler.postDelayed(this, 250);
+            }
+        }
+    };
 
     /**
      * Called when the activity is first created.
@@ -40,6 +60,30 @@ public class FMPActivity extends Activity {
         if (prefs.getBoolean("pref_keepScreenOn", false)) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        gestureDetector = new GestureDetector(this, new FMPGestureDetector(this));
+        seekBar = (SeekBar)findViewById(R.id.barTime);
+        timeLabel = (TextView)findViewById(R.id.lblTime);
+        findViewById(R.id.lytMainSpace).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (!fromUser) {
+                    return;
+                }
+                service.seek(progress * 1000);
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
     }
 
     @Override
@@ -54,6 +98,7 @@ public class FMPActivity extends Activity {
             service.removeSongChangeNotification();
         }
         unbindService(serviceConnection);
+        stopSeekbarTimer();
         super.onStop();
     }
 
@@ -70,6 +115,16 @@ public class FMPActivity extends Activity {
                 public void onNextSong(Song s) {
                     FMPActivity.this.onNextSong(s);
                 }
+
+                @Override
+                public void onStateChanged(FMPService.State state) {
+                    updatePlayButtonText();
+                    if (state == FMPService.State.PLAYING) {
+                        startSeekbarTimer();
+                    } else {
+                        stopSeekbarTimer();
+                    }
+                }
             };
             service = ((FMPService.FMPServiceBinder)binder).getService();
             if (service.getState() == FMPService.State.INVALID) {
@@ -85,6 +140,14 @@ public class FMPActivity extends Activity {
             service = null;
         }
     };
+
+    private void startSeekbarTimer() {
+        seekbarUpdater.run();
+    }
+
+    private void stopSeekbarTimer() {
+        handler.removeCallbacks(seekbarUpdater);
+    }
 
     private void updatePlayButtonText() {
         Button b = (Button)findViewById(R.id.btnPlayPause);
@@ -110,6 +173,10 @@ public class FMPActivity extends Activity {
             s = new File(song.getFilename()).getParentFile().getName();
         }
         ((TextView)findViewById(R.id.lblAlbum)).setText(s);
+
+        seekbarUpdater.run();
+        seekBar.setMax((song.getDuration() + 999) / 1000);
+        seekBar.setProgress(0);
     }
 
 
@@ -147,7 +214,6 @@ public class FMPActivity extends Activity {
             case PAUSED:
             case STOPPED:
                 service.playpause();
-                updatePlayButtonText();
                 break;
         }
     }
@@ -174,5 +240,106 @@ public class FMPActivity extends Activity {
 
     public void onSettingsClick(View view) {
         startActivity(new Intent(this, SettingsActivity.class));
+    }
+
+    private class FMPGestureDetector extends GestureDetector.SimpleOnGestureListener {
+        private static final double FORBIDDEN_ZONE_MIN = Math.PI / 4 - Math.PI / 12;
+        private static final double FORBIDDEN_ZONE_MAX = Math.PI / 4 + Math.PI / 12;
+        private static final int MIN_VELOCITY_DP = 80;  // 0.5 inch/sec
+        private static final int MIN_DISTANCE_DP = 80;  // 0.5 inch
+        private final float MIN_VELOCITY_PX;
+        private final float MIN_DISTANCE_PX;
+
+        public FMPGestureDetector(Context context) {
+            float density = context.getResources().getDisplayMetrics().density;
+            MIN_VELOCITY_PX = MIN_VELOCITY_DP * density;
+            MIN_DISTANCE_PX = MIN_DISTANCE_DP * density;
+        }
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            return true;
+        }
+
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            onBtnPlayPause(null);
+            return false;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            float velocitySquared = velocityX*velocityX + velocityY*velocityY;
+            if (velocitySquared < MIN_VELOCITY_PX * MIN_VELOCITY_PX) {
+                // too slow
+                return false;
+            }
+
+            float deltaX = e2.getX() - e1.getX();
+            float deltaY = e2.getY() - e1.getY();
+
+            if (Math.abs(deltaX) < MIN_DISTANCE_PX && Math.abs(deltaY) < MIN_DISTANCE_PX) {
+                // small movement
+                return false;
+            }
+
+            double angle = Math.atan2(Math.abs(deltaY), Math.abs(deltaX));
+            if (angle > FORBIDDEN_ZONE_MIN && angle < FORBIDDEN_ZONE_MAX) {
+                return false;
+            }
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 0) {
+                    return onFlingRight();
+                } else {
+                    return onFlingLeft();
+                }
+            } else {
+                if (deltaY > 0) {
+                    return onFlingDown();
+                } else {
+                    return onFlingUp();
+                }
+            }
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            Log.i(TAG, "long press");
+        }
+
+        protected boolean onFlingRight() {
+            onNextClick(null);
+            return true;
+        }
+
+        protected boolean onFlingLeft() {
+            onPrevCick(null);
+            return true;
+        }
+
+        protected boolean onFlingUp() {
+            if (service != null) {
+                int newtime = service.getCurrentTime() - 10000;
+                if (newtime < 0) {
+                    newtime = 0;
+                }
+                service.seek(newtime);
+                return true;
+            }
+            return false;
+        }
+
+        protected boolean onFlingDown() {
+            if (service != null) {
+                int newtime = service.getCurrentTime() + 10000;
+                if (newtime > service.getDuration()) {
+                    newtime = service.getDuration();
+                }
+                service.seek(newtime);
+                return true;
+            }
+            return false;
+        }
     }
 }

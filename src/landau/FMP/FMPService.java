@@ -95,6 +95,7 @@ public class FMPService extends Service {
 
     public interface SongChangeNotification {
         void onNextSong(Song s);
+        void onStateChanged(State state);
     }
 
     public class FMPServiceBinder extends Binder {
@@ -164,6 +165,7 @@ public class FMPService extends Service {
     public void connect(SongChangeNotification songChangeNotification) {
         this.songChangeNotification = songChangeNotification;
         songChangeNotification.onNextSong(songList.get(currentSong));
+        songChangeNotification.onStateChanged(state);
     }
 
     public void deinit() {
@@ -276,6 +278,12 @@ public class FMPService extends Service {
         }
     }
 
+    public void seek(int time) {
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(time);
+        }
+    }
+
     public void removeSongChangeNotification() {
         songChangeNotification = null;
     }
@@ -284,8 +292,19 @@ public class FMPService extends Service {
         return state;
     }
 
+    public int getCurrentTime() {
+        return mediaPlayer != null ? mediaPlayer.getCurrentPosition() : 0;
+    }
+
+    public int getDuration() {
+        return mediaPlayer != null ? mediaPlayer.getDuration() : 0;
+    }
+
     private void updateState(State newState) {
         state = newState;
+        if (songChangeNotification != null) {
+            songChangeNotification.onStateChanged(state);
+        }
         if (remoteControlClient == null) {
             return;
         }
@@ -333,7 +352,7 @@ public class FMPService extends Service {
 
         notificationBuilder.setContentTitle(MetadataUtils.getTitle(prefs, song))
                 .setContentText(formatSubtitle(song))
-                .setContentInfo(formatDuration(song.getDuration()))
+                .setContentInfo(MetadataUtils.formatTime(song.getDuration()))
                 .setSmallIcon(android.R.drawable.ic_media_play);
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         notificationManager.notify(1, notificationBuilder.build());
@@ -353,18 +372,6 @@ public class FMPService extends Service {
             }
             return s;
         }
-    }
-    private String formatDuration(int durationMs) {
-        int duration = (durationMs + 999) / 1000;   // sec, round up
-        String sec = String.format("%02d", duration % 60);
-        duration /= 60;  // min
-        String min = String.format("%02d", duration % 60);
-        duration /= 60;  // hour
-        String hour = "";
-        if (duration != 0) {
-            hour = String.valueOf(duration) + ":";
-        }
-        return hour + min + ":" + sec;
     }
 
     private void prepareNextSong() {
