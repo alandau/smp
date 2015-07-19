@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.media.MediaMetadataRetriever;
 import android.util.Log;

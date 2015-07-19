@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -30,10 +30,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class FMPActivity extends Activity {
-    static final String TAG = FMPActivity.class.getSimpleName();
+public class SMPActivity extends Activity {
+    static final String TAG = SMPActivity.class.getSimpleName();
 
-    private FMPService service;
+    private SMPService service;
     private SharedPreferences prefs;
     private GestureDetector gestureDetector;
     private Handler handler = new Handler();
@@ -59,12 +59,12 @@ public class FMPActivity extends Activity {
         super.onCreate(savedInstanceState);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         setContentView(R.layout.main);
-        startService(new Intent(this, FMPService.class));
+        startService(new Intent(this, SMPService.class));
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("pref_keepScreenOn", false)) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        gestureDetector = new GestureDetector(this, new FMPGestureDetector(this));
+        gestureDetector = new GestureDetector(this, new SMPGestureDetector(this));
         seekBar = (SeekBar)findViewById(R.id.barTime);
         timeLabel = (TextView)findViewById(R.id.lblTime);
         findViewById(R.id.lytMainSpace).setOnTouchListener(new View.OnTouchListener() {
@@ -93,7 +93,7 @@ public class FMPActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        bindService(new Intent(this, FMPService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(this, SMPService.class), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -122,7 +122,7 @@ public class FMPActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_open:
-                startActivityForResult(new Intent(this, FMPOpenActivity.class), 1);
+                startActivityForResult(new Intent(this, SMPOpenActivity.class), 1);
                 return true;
             case R.id.action_exit:
                 if (service != null) {
@@ -142,24 +142,24 @@ public class FMPActivity extends Activity {
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
-            FMPService.SongChangeNotification onchange = new FMPService.SongChangeNotification() {
+            SMPService.SongChangeNotification onchange = new SMPService.SongChangeNotification() {
                 @Override
                 public void onNextSong(Song s) {
-                    FMPActivity.this.onNextSong(s);
+                    SMPActivity.this.onNextSong(s);
                 }
 
                 @Override
-                public void onStateChanged(FMPService.State state) {
+                public void onStateChanged(SMPService.State state) {
                     updatePlayButtonText();
-                    if (state == FMPService.State.PLAYING) {
+                    if (state == SMPService.State.PLAYING) {
                         startSeekbarTimer();
                     } else {
                         stopSeekbarTimer();
                     }
                 }
             };
-            service = ((FMPService.FMPServiceBinder)binder).getService();
-            if (service.getState() == FMPService.State.INVALID) {
+            service = ((SMPService.SMPServiceBinder)binder).getService();
+            if (service.getState() == SMPService.State.INVALID) {
                 String path = prefs.getString("state_lastPlayFolder", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
                 service.init(getSongList(path), onchange);
             } else {
@@ -184,7 +184,7 @@ public class FMPActivity extends Activity {
 
     private void updatePlayButtonText() {
         ImageButton b = (ImageButton)findViewById(R.id.btnPlayPause);
-        if (service.getState() == FMPService.State.PLAYING) {
+        if (service.getState() == SMPService.State.PLAYING) {
             b.setImageResource(android.R.drawable.ic_media_pause);
         } else {
             b.setImageResource(android.R.drawable.ic_media_play);
@@ -258,18 +258,8 @@ public class FMPActivity extends Activity {
     }
 
     public void onBtnPlayPause(View view) {
-        FMPService.State state = FMPService.State.INVALID;
-        if (service != null) {
-            state = service.getState();
-        }
-        switch (state) {
-            case INVALID:
-                break;
-            case PLAYING:
-            case PAUSED:
-            case STOPPED:
-                service.playpause();
-                break;
+        if (service != null && service.getState() != SMPService.State.INVALID) {
+            service.playpause();
         }
     }
 
@@ -285,7 +275,7 @@ public class FMPActivity extends Activity {
         }
     }
 
-    private class FMPGestureDetector extends GestureDetector.SimpleOnGestureListener {
+    private class SMPGestureDetector extends GestureDetector.SimpleOnGestureListener {
         private static final double FORBIDDEN_ZONE_MIN = Math.PI / 4 - Math.PI / 12;
         private static final double FORBIDDEN_ZONE_MAX = Math.PI / 4 + Math.PI / 12;
         private static final int MIN_VELOCITY_DP = 80;  // 0.5 inch/sec
@@ -293,7 +283,7 @@ public class FMPActivity extends Activity {
         private final float MIN_VELOCITY_PX;
         private final float MIN_DISTANCE_PX;
 
-        public FMPGestureDetector(Context context) {
+        public SMPGestureDetector(Context context) {
             float density = context.getResources().getDisplayMetrics().density;
             MIN_VELOCITY_PX = MIN_VELOCITY_DP * density;
             MIN_DISTANCE_PX = MIN_DISTANCE_DP * density;

@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.content.SharedPreferences;
 
@@ -78,7 +78,7 @@ public class MetadataUtils {
     private static String transliterate(String s) {
         StringBuilder builder = new StringBuilder(s.length() + 10);
         for (int i = 0; i < s.length(); i++) {
-            String replacement = (String)transliterationMap.get(s.charAt(i));
+            String replacement = transliterationMap.get(s.charAt(i));
             if (replacement != null) {
                 builder.append(replacement);
             } else {

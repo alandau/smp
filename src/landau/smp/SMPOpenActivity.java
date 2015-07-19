@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.app.ListActivity;
 import android.content.Context;
@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class FMPOpenActivity extends ListActivity {
+public class SMPOpenActivity extends ListActivity {
     private static final String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
     private SharedPreferences prefs;
     private File curFolder;

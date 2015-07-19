@@ -1,11 +1,11 @@
-package landau.FMP;
+package landau.smp;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.view.KeyEvent;
 
-public class FMPMediaButtonReceiver extends BroadcastReceiver {
+public class SMPMediaButtonReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
@@ -17,41 +17,41 @@ public class FMPMediaButtonReceiver extends BroadcastReceiver {
                 return;
             }
 
-            FMPService.MediaButtonCommand command = FMPService.MediaButtonCommand.NOOP;
+            SMPService.MediaButtonCommand command = SMPService.MediaButtonCommand.NOOP;
             switch (e.getKeyCode()) {
                 case KeyEvent.KEYCODE_HEADSETHOOK:
-                    command = FMPService.MediaButtonCommand.NEXT;
+                    command = SMPService.MediaButtonCommand.NEXT;
                     break;
 
                 case KeyEvent.KEYCODE_MEDIA_PLAY:
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                 case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                    command = FMPService.MediaButtonCommand.PLAY_PAUSE;
+                    command = SMPService.MediaButtonCommand.PLAY_PAUSE;
                     break;
 
                 case KeyEvent.KEYCODE_MEDIA_NEXT:
-                    command = FMPService.MediaButtonCommand.NEXT;
+                    command = SMPService.MediaButtonCommand.NEXT;
                     break;
                 case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
-                    command = FMPService.MediaButtonCommand.PREV;
+                    command = SMPService.MediaButtonCommand.PREV;
                     break;
 
                 case KeyEvent.KEYCODE_MEDIA_STOP:
-                    command = FMPService.MediaButtonCommand.STOP;
+                    command = SMPService.MediaButtonCommand.STOP;
                     break;
 
                 case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
-                    command = FMPService.MediaButtonCommand.FAST_FORWARD;
+                    command = SMPService.MediaButtonCommand.FAST_FORWARD;
                     break;
                 case KeyEvent.KEYCODE_MEDIA_REWIND:
-                    command = FMPService.MediaButtonCommand.REWIND;
+                    command = SMPService.MediaButtonCommand.REWIND;
                     break;
             }
 
-            if (command != FMPService.MediaButtonCommand.NOOP) {
-                Intent i = new Intent(context, FMPService.class);
-                i.setAction(FMPService.MEDIA_BUTTON_ACTION);
-                i.putExtra(FMPService.MEDIA_BUTTON_COMMAND, command.name());
+            if (command != SMPService.MediaButtonCommand.NOOP) {
+                Intent i = new Intent(context, SMPService.class);
+                i.setAction(SMPService.MEDIA_BUTTON_ACTION);
+                i.putExtra(SMPService.MEDIA_BUTTON_COMMAND, command.name());
                 context.startService(i);
                 if (isOrderedBroadcast()) {
                     abortBroadcast();

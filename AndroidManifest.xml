@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="landau.FMP"
+          package="landau.smp"
           android:versionCode="1"
           android:versionName="1.0">
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="19"/>
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
-        <activity android:name="FMPActivity"
+    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="true">
+        <activity android:name=".SMPActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -14,16 +16,13 @@
         </activity>
         <activity android:name=".SettingsActivity"
                   android:label="Settings"/>
-        <activity android:name=".FMPOpenActivity"
+        <activity android:name=".SMPOpenActivity"
                   android:label="Select file/folder"/>
-        <service android:name=".FMPService"/>
-        <receiver android:name=".FMPMediaButtonReceiver">
+        <service android:name=".SMPService"/>
+        <receiver android:name=".SMPMediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON"/>
             </intent-filter>
         </receiver>
     </application>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <!--<uses-permission android:name="android.permission.BLUETOOTH"/>-->
 </manifest>

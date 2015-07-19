@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -22,13 +22,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class FMPService extends Service {
-    public static final String MEDIA_BUTTON_ACTION = FMPService.class.getCanonicalName() + ".action";
-    public static final String MEDIA_BUTTON_COMMAND = FMPService.class.getCanonicalName() + ".command";
+public class SMPService extends Service {
+    public static final String MEDIA_BUTTON_ACTION = SMPService.class.getCanonicalName() + ".action";
+    public static final String MEDIA_BUTTON_COMMAND = SMPService.class.getCanonicalName() + ".command";
 
     public enum MediaButtonCommand { NOOP, PLAY_PAUSE, NEXT, PREV, STOP, FAST_FORWARD, REWIND }
 
-    private static final String TAG = FMPService.class.getSimpleName();
+    private static final String TAG = SMPService.class.getSimpleName();
 
 
     private List<Song> songList;
@@ -97,13 +97,13 @@ public class FMPService extends Service {
         void onStateChanged(State state);
     }
 
-    public class FMPServiceBinder extends Binder {
-        FMPService getService() {
-            return FMPService.this;
+    public class SMPServiceBinder extends Binder {
+        SMPService getService() {
+            return SMPService.this;
         }
     }
 
-    private final FMPServiceBinder binder = new FMPServiceBinder();
+    private final SMPServiceBinder binder = new SMPServiceBinder();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -154,7 +154,7 @@ public class FMPService extends Service {
     public void init(List<Song> songList, SongChangeNotification songChangeNotification) {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         setSongList(songList);
-        Intent intent = new Intent(this, FMPActivity.class)
+        Intent intent = new Intent(this, SMPActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         notificationBuilder = new Notification.Builder(this)
                 .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
@@ -195,7 +195,7 @@ public class FMPService extends Service {
 
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         audioManager.unregisterRemoteControlClient(remoteControlClient);
-        audioManager.unregisterMediaButtonEventReceiver(new ComponentName(this, FMPMediaButtonReceiver.class));
+        audioManager.unregisterMediaButtonEventReceiver(new ComponentName(this, SMPMediaButtonReceiver.class));
 
         songChangeNotification = null;
         stopSelf();
@@ -430,7 +430,7 @@ public class FMPService extends Service {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    FMPService.this.mediaPlayer = otherMediaPlayer();
+                    SMPService.this.mediaPlayer = otherMediaPlayer();
                     currentSong = (currentSong + 1) % songList.size();
                     setNotification();
                     prepareNextSong();
@@ -444,7 +444,7 @@ public class FMPService extends Service {
     }
 
     private void registerRemoteControl() {
-        ComponentName eventReceiver = new ComponentName(this, FMPMediaButtonReceiver.class);
+        ComponentName eventReceiver = new ComponentName(this, SMPMediaButtonReceiver.class);
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         audioManager.registerMediaButtonEventReceiver(eventReceiver);
 

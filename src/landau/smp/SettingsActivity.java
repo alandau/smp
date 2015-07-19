@@ -1,4 +1,4 @@
-package landau.FMP;
+package landau.smp;
 
 import android.app.Activity;
 import android.os.Bundle;
