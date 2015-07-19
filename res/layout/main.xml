@@ -15,7 +15,7 @@
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Title"
+                android:text="Select files"
                 android:id="@+id/lblTitle" android:textSize="50sp"
                 android:gravity="center_horizontal"
                 android:singleLine="false"
@@ -23,7 +23,7 @@
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Artist"
+                android:text=""
                 android:id="@+id/lblArtist" android:textSize="30sp"
                 android:gravity="center_horizontal"
                 android:singleLine="false"
@@ -31,7 +31,7 @@
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Album"
+                android:text=""
                 android:id="@+id/lblAlbum" android:textSize="30sp"
                 android:gravity="center_horizontal"
                 android:singleLine="false"
@@ -50,7 +50,7 @@
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="0:00 / 1:00"
+                android:text=""
                 android:id="@+id/lblTime"
                 android:gravity="center_horizontal" android:textSize="30sp"/>
     </LinearLayout>
@@ -69,29 +69,14 @@
                 android:layout_height="wrap_content"
                 android:text="Play"
                 android:id="@+id/btnPlayPause" android:layout_gravity="bottom" android:onClick="onBtnPlayPause"
-                android:layout_alignParentBottom="true" android:layout_toLeftOf="@+id/btnSeek"/>
+                android:layout_alignParentBottom="true"/>
         <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Next"
                 android:id="@+id/btnNext" android:onClick="onNextClick"
                 android:background="#1decff" android:textColor="@android:color/black"
-                android:layout_alignParentBottom="true" android:layout_centerHorizontal="true"
-                />
-        <Space
-                android:layout_width="50px"
-                android:layout_height="20px"
-                />
-        <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Settings"
-                android:id="@+id/btnSettings" android:onClick="onSettingsClick"/>
-        <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Exit"
-                android:id="@+id/btnExit" android:onClick="onExitClick"/>
+                android:layout_alignParentBottom="true" android:layout_centerHorizontal="true"/>
     </LinearLayout>
 </LinearLayout>
 

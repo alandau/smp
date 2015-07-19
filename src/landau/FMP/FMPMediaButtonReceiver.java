@@ -39,6 +39,13 @@ public class FMPMediaButtonReceiver extends BroadcastReceiver {
                 case KeyEvent.KEYCODE_MEDIA_STOP:
                     command = FMPService.MediaButtonCommand.STOP;
                     break;
+
+                case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                    command = FMPService.MediaButtonCommand.FAST_FORWARD;
+                    break;
+                case KeyEvent.KEYCODE_MEDIA_REWIND:
+                    command = FMPService.MediaButtonCommand.REWIND;
+                    break;
             }
 
             if (command != FMPService.MediaButtonCommand.NOOP) {

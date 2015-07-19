@@ -13,6 +13,9 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -25,6 +28,7 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class FMPActivity extends Activity {
     static final String TAG = FMPActivity.class.getSimpleName();
@@ -107,6 +111,34 @@ public class FMPActivity extends Activity {
         super.onDestroy();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_open:
+                startActivityForResult(new Intent(this, FMPOpenActivity.class), 1);
+                return true;
+            case R.id.action_exit:
+                if (service != null) {
+                    service.removeSongChangeNotification();
+                    service.deinit();
+                }
+                finish();
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
@@ -128,7 +160,8 @@ public class FMPActivity extends Activity {
             };
             service = ((FMPService.FMPServiceBinder)binder).getService();
             if (service.getState() == FMPService.State.INVALID) {
-                service.init(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Music", getSongList(), onchange);
+                String path = prefs.getString("state_lastPlayFolder", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
+                service.init(getSongList(path), onchange);
             } else {
                 service.connect(onchange);
             }
@@ -159,6 +192,15 @@ public class FMPActivity extends Activity {
     }
 
     private void onNextSong(Song song) {
+        if (song == null) {
+            ((TextView)findViewById(R.id.lblTitle)).setText("Select files");
+            ((TextView)findViewById(R.id.lblArtist)).setText("");
+            ((TextView)findViewById(R.id.lblAlbum)).setText("");
+            seekBar.setMax(0);
+            seekBar.setProgress(0);
+            timeLabel.setText("");
+            return;
+        }
         String s = MetadataUtils.getTitle(prefs, song);
         ((TextView)findViewById(R.id.lblTitle)).setText(s);
 
@@ -187,7 +229,13 @@ public class FMPActivity extends Activity {
                 return pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
             }
         };
-        for (File f : root.listFiles(filter)) {
+        File[] files = root.listFiles(filter);
+        if (files == null) {
+            // root is not a directory
+            result.add(new Song(root.getAbsolutePath()));
+            return;
+        }
+        for (File f : files) {
             if (f.isDirectory()) {
                 getSongListImpl(result, f);
             } else {
@@ -195,10 +243,17 @@ public class FMPActivity extends Activity {
             }
         }
     }
-    private List<Song> getSongList() {
+    private List<Song> getSongList(String path) {
         List<Song> songs = new ArrayList<Song>();
-        getSongListImpl(songs, new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Music"));
-        Collections.shuffle(songs);
+        getSongListImpl(songs, new File(path));
+        long seed;
+        if (!prefs.contains("state_lastShuffleSeed")) {
+            seed = new Random().nextLong();
+            prefs.edit().putLong("state_lastShuffleSeed", seed).commit();
+        } else {
+            seed = prefs.getLong("state_lastShuffleSeed", 0);
+        }
+        Collections.shuffle(songs, new Random(seed));
         return songs;
     }
 
@@ -228,18 +283,6 @@ public class FMPActivity extends Activity {
         if (service != null) {
             service.next();
         }
-    }
-
-    public void onExitClick(View view) {
-        if (service != null) {
-            service.removeSongChangeNotification();
-            service.deinit();
-            finish();
-        }
-    }
-
-    public void onSettingsClick(View view) {
-        startActivity(new Intent(this, SettingsActivity.class));
     }
 
     private class FMPGestureDetector extends GestureDetector.SimpleOnGestureListener {
@@ -320,11 +363,7 @@ public class FMPActivity extends Activity {
 
         protected boolean onFlingUp() {
             if (service != null) {
-                int newtime = service.getCurrentTime() - 10000;
-                if (newtime < 0) {
-                    newtime = 0;
-                }
-                service.seek(newtime);
+                service.rewind();
                 return true;
             }
             return false;
@@ -332,14 +371,28 @@ public class FMPActivity extends Activity {
 
         protected boolean onFlingDown() {
             if (service != null) {
-                int newtime = service.getCurrentTime() + 10000;
-                if (newtime > service.getDuration()) {
-                    newtime = service.getDuration();
-                }
-                service.seek(newtime);
+                service.fastForward();
                 return true;
             }
             return false;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode != 1 || resultCode != RESULT_OK) {
+            return;
+        }
+
+        String path = data.getStringExtra("path");
+        prefs.edit()
+                .putString("state_lastPlayFolder", path)
+                .remove("state_lastShuffleSeed")
+                .remove("state_lastPlayedSong")
+                .commit();
+        if (service != null) {
+            service.setSongList(getSongList(path));
+            service.playpause();
         }
     }
 }

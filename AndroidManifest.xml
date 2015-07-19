@@ -3,7 +3,7 @@
           package="landau.FMP"
           android:versionCode="1"
           android:versionName="1.0">
-    <uses-sdk android:minSdkVersion="16"/>
+    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="19"/>
     <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
         <activity android:name="FMPActivity"
                   android:label="@string/app_name">
@@ -14,6 +14,8 @@
         </activity>
         <activity android:name=".SettingsActivity"
                   android:label="Settings"/>
+        <activity android:name=".FMPOpenActivity"
+                  android:label="Select file/folder"/>
         <service android:name=".FMPService"/>
         <receiver android:name=".FMPMediaButtonReceiver">
             <intent-filter>

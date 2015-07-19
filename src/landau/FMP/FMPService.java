@@ -26,13 +26,12 @@ public class FMPService extends Service {
     public static final String MEDIA_BUTTON_ACTION = FMPService.class.getCanonicalName() + ".action";
     public static final String MEDIA_BUTTON_COMMAND = FMPService.class.getCanonicalName() + ".command";
 
-    public enum MediaButtonCommand { NOOP, PLAY_PAUSE, NEXT, PREV, STOP }
+    public enum MediaButtonCommand { NOOP, PLAY_PAUSE, NEXT, PREV, STOP, FAST_FORWARD, REWIND }
 
     private static final String TAG = FMPService.class.getSimpleName();
 
 
     private List<Song> songList;
-    private String root;
     private int currentSong;
     private MediaPlayer mediaPlayer1, mediaPlayer2, mediaPlayer;
     private Notification.Builder notificationBuilder;
@@ -132,6 +131,12 @@ public class FMPService extends Service {
                     playpause();
                 }
                 break;
+            case FAST_FORWARD:
+                fastForward();
+                break;
+            case REWIND:
+                rewind();
+                break;
         }
         return START_STICKY;
     }
@@ -146,10 +151,9 @@ public class FMPService extends Service {
         return false;
     }
 
-    public void init(String root, List<Song> songList, SongChangeNotification songChangeNotification) {
+    public void init(List<Song> songList, SongChangeNotification songChangeNotification) {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        this.root = root;
-        this.songList = songList;
+        setSongList(songList);
         Intent intent = new Intent(this, FMPActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         notificationBuilder = new Notification.Builder(this)
@@ -157,14 +161,30 @@ public class FMPService extends Service {
                 .setSmallIcon(android.R.drawable.ic_media_pause)
                 .setContentTitle(getText(R.string.app_name));
         startForeground(1, notificationBuilder.build());
-        currentSong = 0;
         this.songChangeNotification = songChangeNotification;
-        updateState(State.STOPPED);
+        if (songList.size() > 0) {
+            Song song = songList.get(currentSong);
+            song.extractMetadata();
+            songChangeNotification.onNextSong(song);
+        }
+    }
+
+    public void  setSongList(List<Song> songList) {
+        stop();
+        this.songList = songList;
+        currentSong = prefs.getInt("state_lastPlayedSong", 0);
+        if (currentSong >= songList.size()) {
+            currentSong = 0;
+        }
     }
 
     public void connect(SongChangeNotification songChangeNotification) {
         this.songChangeNotification = songChangeNotification;
-        songChangeNotification.onNextSong(songList.get(currentSong));
+        if (currentSong < songList.size()) {
+            songChangeNotification.onNextSong(songList.get(currentSong));
+        } else {
+            songChangeNotification.onNextSong(null);
+        }
         songChangeNotification.onStateChanged(state);
     }
 
@@ -186,13 +206,13 @@ public class FMPService extends Service {
             mediaPlayer1 = new MediaPlayer();
             initMediaPlayer(mediaPlayer1, songList.get(currentSong).getFilename());
             mediaPlayer = mediaPlayer1;
-            if (songList.size() >= 2) {
-                mediaPlayer2 = new MediaPlayer();
-                prepareNextSong();
-                initMediaPlayer(mediaPlayer2, songList.get((currentSong + 1) % songList.size()).getFilename());
-                mediaPlayer1.setNextMediaPlayer(mediaPlayer2);
-                mediaPlayer2.setNextMediaPlayer(mediaPlayer1);
-            }
+
+            // mediaPlayer2 might point to the same song if songList.size() == 1
+            mediaPlayer2 = new MediaPlayer();
+            prepareNextSong();
+            initMediaPlayer(mediaPlayer2, songList.get((currentSong + 1) % songList.size()).getFilename());
+            mediaPlayer1.setNextMediaPlayer(mediaPlayer2);
+            mediaPlayer2.setNextMediaPlayer(mediaPlayer1);
         }
     }
 
@@ -225,6 +245,10 @@ public class FMPService extends Service {
         }
         if (mediaPlayer == null) {
             initMediaPlayers();
+        }
+        if (mediaPlayer == null) {
+            // no songs
+            return;
         }
         AudioManager am = (AudioManager)getSystemService(AUDIO_SERVICE);
         int result = am.requestAudioFocus(audioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -282,6 +306,22 @@ public class FMPService extends Service {
         if (mediaPlayer != null) {
             mediaPlayer.seekTo(time);
         }
+    }
+
+    public void rewind() {
+        int newtime = getCurrentTime() - 10000;
+        if (newtime < 0) {
+            newtime = 0;
+        }
+        seek(newtime);
+    }
+
+    public void fastForward() {
+        int newtime = getCurrentTime() + 10000;
+        if (newtime > getDuration()) {
+            newtime = getDuration();
+        }
+        seek(newtime);
     }
 
     public void removeSongChangeNotification() {
@@ -367,14 +407,12 @@ public class FMPService extends Service {
             return song.getAlbum();
         } else {
             String s = new File(song.getFilename()).getParent();
-            if (s.startsWith(root)) {
-                s = s.substring(root.length() + 1);
-            }
             return s;
         }
     }
 
     private void prepareNextSong() {
+        prefs.edit().putInt("state_lastPlayedSong", currentSong).commit();
         int nextIdx = (currentSong + 1) % songList.size();
         if (nextIdx >= songList.size()) {
             return;
@@ -423,7 +461,9 @@ public class FMPService extends Service {
                 RemoteControlClient.FLAG_KEY_MEDIA_PLAY |
                 RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE |
                 RemoteControlClient.FLAG_KEY_MEDIA_PAUSE |
-                RemoteControlClient.FLAG_KEY_MEDIA_STOP
+                RemoteControlClient.FLAG_KEY_MEDIA_STOP |
+                RemoteControlClient.FLAG_KEY_MEDIA_FAST_FORWARD |
+                RemoteControlClient.FLAG_KEY_MEDIA_REWIND
         );
     }
 }
