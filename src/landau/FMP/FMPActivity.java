@@ -19,7 +19,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -183,11 +183,11 @@ public class FMPActivity extends Activity {
     }
 
     private void updatePlayButtonText() {
-        Button b = (Button)findViewById(R.id.btnPlayPause);
+        ImageButton b = (ImageButton)findViewById(R.id.btnPlayPause);
         if (service.getState() == FMPService.State.PLAYING) {
-            b.setText("Pause");
+            b.setImageResource(android.R.drawable.ic_media_pause);
         } else {
-            b.setText("Play");
+            b.setImageResource(android.R.drawable.ic_media_play);
         }
     }
 
