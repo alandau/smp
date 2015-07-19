@@ -201,20 +201,9 @@ public class SMPActivity extends Activity {
             timeLabel.setText("");
             return;
         }
-        String s = MetadataUtils.getTitle(prefs, song);
-        ((TextView)findViewById(R.id.lblTitle)).setText(s);
-
-        s = song.getArtist();
-        if (s == null) {
-            s = new File(song.getFilename()).getParentFile().getParentFile().getName();
-        }
-        ((TextView)findViewById(R.id.lblArtist)).setText(s);
-
-        s = song.getAlbum();
-        if (s == null) {
-            s = new File(song.getFilename()).getParentFile().getName();
-        }
-        ((TextView)findViewById(R.id.lblAlbum)).setText(s);
+        ((TextView)findViewById(R.id.lblTitle)).setText(MetadataUtils.getTitle(prefs, song));
+        ((TextView)findViewById(R.id.lblArtist)).setText(MetadataUtils.getArtist(prefs, song));
+        ((TextView)findViewById(R.id.lblAlbum)).setText(MetadataUtils.getAlbum(prefs, song));
 
         seekbarUpdater.run();
         seekBar.setMax((song.getDuration() + 999) / 1000);

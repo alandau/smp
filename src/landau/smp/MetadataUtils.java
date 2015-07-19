@@ -47,6 +47,10 @@ public class MetadataUtils {
         return maybeTransliterate(prefs, getAlbum(prefs, song));
     }
 
+    public static String getArtistAndAlbum(SharedPreferences prefs, Song song) {
+        return getArtist(prefs, song) + " - " + getAlbum(prefs, song);
+    }
+
     public static String formatTime(int timeMs) {
         int time = (timeMs + 999) / 1000;   // sec, round up
         String sec = String.format("%02d", time % 60);

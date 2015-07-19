@@ -18,7 +18,6 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -391,24 +390,11 @@ public class SMPService extends Service {
         e.apply();
 
         notificationBuilder.setContentTitle(MetadataUtils.getTitle(prefs, song))
-                .setContentText(formatSubtitle(song))
+                .setContentText(MetadataUtils.getArtistAndAlbum(prefs, song))
                 .setContentInfo(MetadataUtils.formatTime(song.getDuration()))
                 .setSmallIcon(android.R.drawable.ic_media_play);
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         notificationManager.notify(1, notificationBuilder.build());
-    }
-
-    private String formatSubtitle(Song song) {
-        if (song.getArtist() != null && song.getAlbum() != null) {
-            return song.getArtist() + " - " + song.getAlbum();
-        } else if (song.getArtist() != null) {
-            return song.getArtist();
-        } else if (song.getAlbum() != null) {
-            return song.getAlbum();
-        } else {
-            String s = new File(song.getFilename()).getParent();
-            return s;
-        }
     }
 
     private void prepareNextSong() {
