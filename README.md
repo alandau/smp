@@ -14,6 +14,9 @@ Non-features:
 - Collections, libraries (because music is usually already organized in folders)
 - Album art, ratings
 
+### Download
+Download SMP.apk from the [Releases](https://github.com/alandau/smp/releases/latest) page.
+
 ### License
 Apache License 2.0
 
