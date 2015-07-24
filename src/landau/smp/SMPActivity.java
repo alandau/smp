@@ -238,7 +238,7 @@ public class SMPActivity extends Activity {
         long seed;
         if (!prefs.contains("state_lastShuffleSeed")) {
             seed = new Random().nextLong();
-            prefs.edit().putLong("state_lastShuffleSeed", seed).commit();
+            prefs.edit().putLong("state_lastShuffleSeed", seed).apply();
         } else {
             seed = prefs.getLong("state_lastShuffleSeed", 0);
         }
@@ -368,7 +368,7 @@ public class SMPActivity extends Activity {
                 .putString("state_lastPlayFolder", path)
                 .remove("state_lastShuffleSeed")
                 .remove("state_lastPlayedSong")
-                .commit();
+                .apply();
         if (service != null) {
             service.setSongList(getSongList(path));
             service.playpause();

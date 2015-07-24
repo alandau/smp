@@ -398,7 +398,7 @@ public class SMPService extends Service {
     }
 
     private void prepareNextSong() {
-        prefs.edit().putInt("state_lastPlayedSong", currentSong).commit();
+        prefs.edit().putInt("state_lastPlayedSong", currentSong).apply();
         int nextIdx = (currentSong + 1) % songList.size();
         if (nextIdx >= songList.size()) {
             return;
