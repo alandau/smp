@@ -164,6 +164,12 @@ public class SMPService extends Service {
         if (songList.size() > 0) {
             Song song = songList.get(currentSong);
             song.extractMetadata();
+            playAfterStop();
+            pause();
+            if (prefs.contains("state_lastPosition")) {
+                int position = prefs.getInt("state_lastPosition", 0);
+                seek(position);
+            }
             songChangeNotification.onNextSong(song);
         }
     }
@@ -260,6 +266,7 @@ public class SMPService extends Service {
     }
 
     private void stop() {
+        saveCurrentPosition();
         if (mediaPlayer1 != null) {
             mediaPlayer1.release();
             mediaPlayer1 = null;
@@ -451,5 +458,22 @@ public class SMPService extends Service {
                 RemoteControlClient.FLAG_KEY_MEDIA_FAST_FORWARD |
                 RemoteControlClient.FLAG_KEY_MEDIA_REWIND
         );
+    }
+
+    private void saveCurrentPosition() {
+        String isSave = prefs.getString("pref_rememberPosition", "");
+        if (isSave.isEmpty()) {
+            prefs.edit().remove("state_lastPosition").apply();
+            return;
+        }
+        int minLength = Integer.valueOf(isSave);    // in seconds
+        if (mediaPlayer == null) {
+            return;
+        }
+        if (mediaPlayer.getDuration() >= minLength * 1000) {
+            prefs.edit().putInt("state_lastPosition", mediaPlayer.getCurrentPosition()).apply();
+        } else {
+            prefs.edit().remove("state_lastPosition").apply();
+        }
     }
 }

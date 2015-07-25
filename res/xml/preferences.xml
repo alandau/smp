@@ -16,4 +16,11 @@
         android:key="pref_transliterate"
         android:title="Transliterate on Bluetooth"
         android:defaultValue="false"/>
+    <ListPreference
+        android:key="pref_rememberPosition"
+        android:title="Remember position within file"
+        android:summary="%s"
+        android:entries="@array/pref_rememberPosition_entries"
+        android:entryValues="@array/pref_rememberPosition_values"
+        android:defaultValue=""/>
 </PreferenceScreen>
