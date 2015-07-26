@@ -65,6 +65,10 @@ public class SMPActivity extends Activity {
         if (prefs.getBoolean("pref_keepScreenOn", false)) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        if (prefs.getBoolean("pref_disableLockScreen", false)) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD |
+                                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        }
         gestureDetector = new GestureDetector(this, new SMPGestureDetector(this));
         seekBar = (SeekBar)findViewById(R.id.barTime);
         timeLabel = (TextView)findViewById(R.id.lblTime);

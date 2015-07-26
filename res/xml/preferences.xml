@@ -28,6 +28,10 @@
             android:title="Keep screen on during playback"
             android:defaultValue="false"/>
         <CheckBoxPreference
+            android:key="pref_disableLockScreen"
+            android:title="Disable lock screen"
+            android:defaultValue="false"/>
+        <CheckBoxPreference
             android:key="pref_transliterate"
             android:title="Transliterate on Bluetooth"
             android:defaultValue="false"/>
