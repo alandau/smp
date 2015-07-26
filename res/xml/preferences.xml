@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <ListPreference
-        android:key="pref_duckVolume"
-        android:title="Volume when GPS active"
-        android:summary="%s"
-        android:entries="@array/pref_duckVolume_entries"
-        android:entryValues="@array/pref_duckVolume_values"
-        android:defaultValue="50"/>
-    <CheckBoxPreference
-        android:key="pref_keepScreenOn"
-        android:title="Keep screen on during playback"
-        android:defaultValue="false"/>
-    <CheckBoxPreference
-        android:key="pref_transliterate"
-        android:title="Transliterate on Bluetooth"
-        android:defaultValue="false"/>
-    <ListPreference
-        android:key="pref_rememberPosition"
-        android:title="Remember position within file"
-        android:summary="%s"
-        android:entries="@array/pref_rememberPosition_entries"
-        android:entryValues="@array/pref_rememberPosition_values"
-        android:defaultValue=""/>
-    <CheckBoxPreference
-        android:key="pref_shuffle"
-        android:title="Shuffle"
-        android:summary="Randomize files for playback"
-        android:defaultValue="false"/>
+    <PreferenceCategory android:title="Playback">
+        <CheckBoxPreference
+                android:key="pref_shuffle"
+                android:title="Shuffle"
+                android:summary="Randomize files for playback"
+                android:defaultValue="false"/>
+        <ListPreference
+                android:key="pref_rememberPosition"
+                android:title="Remember position within file"
+                android:summary="%s"
+                android:entries="@array/pref_rememberPosition_entries"
+                android:entryValues="@array/pref_rememberPosition_values"
+                android:defaultValue=""/>
+        <ListPreference
+                android:key="pref_duckVolume"
+                android:title="Volume when GPS active"
+                android:summary="%s"
+                android:entries="@array/pref_duckVolume_entries"
+                android:entryValues="@array/pref_duckVolume_values"
+                android:defaultValue="50"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Workarounds">
+        <CheckBoxPreference
+            android:key="pref_keepScreenOn"
+            android:title="Keep screen on during playback"
+            android:defaultValue="false"/>
+        <CheckBoxPreference
+            android:key="pref_transliterate"
+            android:title="Transliterate on Bluetooth"
+            android:defaultValue="false"/>
+    </PreferenceCategory>
 </PreferenceScreen>
