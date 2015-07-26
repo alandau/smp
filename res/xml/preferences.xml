@@ -23,4 +23,9 @@
         android:entries="@array/pref_rememberPosition_entries"
         android:entryValues="@array/pref_rememberPosition_values"
         android:defaultValue=""/>
+    <CheckBoxPreference
+        android:key="pref_shuffle"
+        android:title="Shuffle"
+        android:summary="Randomize files for playback"
+        android:defaultValue="false"/>
 </PreferenceScreen>

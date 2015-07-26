@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -235,14 +236,23 @@ public class SMPActivity extends Activity {
     private List<Song> getSongList(String path) {
         List<Song> songs = new ArrayList<Song>();
         getSongListImpl(songs, new File(path));
-        long seed;
-        if (!prefs.contains("state_lastShuffleSeed")) {
-            seed = new Random().nextLong();
-            prefs.edit().putLong("state_lastShuffleSeed", seed).apply();
+        if (prefs.getBoolean("pref_shuffle", false)) {
+            long seed;
+            if (!prefs.contains("state_lastShuffleSeed")) {
+                seed = new Random().nextLong();
+                prefs.edit().putLong("state_lastShuffleSeed", seed).apply();
+            } else {
+                seed = prefs.getLong("state_lastShuffleSeed", 0);
+            }
+            Collections.shuffle(songs, new Random(seed));
         } else {
-            seed = prefs.getLong("state_lastShuffleSeed", 0);
+            Collections.sort(songs, new Comparator<Song>() {
+                @Override
+                public int compare(Song lhs, Song rhs) {
+                    return lhs.getFilename().compareTo(rhs.getFilename());
+                }
+            });
         }
-        Collections.shuffle(songs, new Random(seed));
         return songs;
     }
 
