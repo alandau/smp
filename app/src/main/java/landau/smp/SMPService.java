@@ -1,6 +1,7 @@
 package landau.smp;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -13,6 +14,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
@@ -155,7 +157,16 @@ public class SMPService extends Service {
         setSongList(songList);
         Intent intent = new Intent(this, SMPActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        notificationBuilder = new Notification.Builder(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel("channel", "SMP", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationManager manager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            assert manager != null;
+            manager.createNotificationChannel(channel);
+            notificationBuilder = new Notification.Builder(this, "channel");
+        } else {
+            notificationBuilder = new Notification.Builder(this);
+        }
+        notificationBuilder
                 .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
                 .setSmallIcon(android.R.drawable.ic_media_pause)
                 .setContentTitle(getText(R.string.app_name));

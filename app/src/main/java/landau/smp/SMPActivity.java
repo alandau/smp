@@ -225,8 +225,9 @@ public class SMPActivity extends Activity {
         };
         File[] files = root.listFiles(filter);
         if (files == null) {
-            // root is not a directory
-            result.add(new Song(root.getAbsolutePath()));
+            if (!root.isDirectory()) {
+                result.add(new Song(root.getAbsolutePath()));
+            }
             return;
         }
         for (File f : files) {
