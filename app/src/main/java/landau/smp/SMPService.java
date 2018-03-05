@@ -98,6 +98,7 @@ public class SMPService extends Service {
         void onStateChanged(State state);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public class SMPServiceBinder extends Binder {
         SMPService getService() {
             return SMPService.this;
@@ -210,6 +211,7 @@ public class SMPService extends Service {
         updateState(State.INVALID);
 
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        assert audioManager != null;
         audioManager.unregisterRemoteControlClient(remoteControlClient);
         audioManager.unregisterMediaButtonEventReceiver(new ComponentName(this, SMPMediaButtonReceiver.class));
 
@@ -267,6 +269,7 @@ public class SMPService extends Service {
             return;
         }
         AudioManager am = (AudioManager)getSystemService(AUDIO_SERVICE);
+        assert am != null;
         int result = am.requestAudioFocus(audioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             Log.e(TAG, "Can't get focus: " + result);
@@ -388,6 +391,7 @@ public class SMPService extends Service {
     private void setPauseNotificationIcon() {
         notificationBuilder.setSmallIcon(android.R.drawable.ic_media_pause);
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        assert notificationManager != null;
         notificationManager.notify(1, notificationBuilder.build());
     }
 
@@ -412,6 +416,7 @@ public class SMPService extends Service {
                 .setContentInfo(MetadataUtils.formatTime(song.getDuration()))
                 .setSmallIcon(android.R.drawable.ic_media_play);
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        assert notificationManager != null;
         notificationManager.notify(1, notificationBuilder.build());
     }
 
@@ -431,14 +436,11 @@ public class SMPService extends Service {
         try {
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setDataSource(filename);
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    SMPService.this.mediaPlayer = otherMediaPlayer();
-                    currentSong = (currentSong + 1) % songList.size();
-                    setNotification();
-                    prepareNextSong();
-                }
+            mediaPlayer.setOnCompletionListener(mp -> {
+                SMPService.this.mediaPlayer = otherMediaPlayer();
+                currentSong = (currentSong + 1) % songList.size();
+                setNotification();
+                prepareNextSong();
             });
             mediaPlayer.prepare();
             mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -450,6 +452,7 @@ public class SMPService extends Service {
     private void registerRemoteControl() {
         ComponentName eventReceiver = new ComponentName(this, SMPMediaButtonReceiver.class);
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        assert audioManager != null;
         audioManager.registerMediaButtonEventReceiver(eventReceiver);
 
         // build the PendingIntent for the remote control client

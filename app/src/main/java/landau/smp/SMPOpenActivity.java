@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -18,9 +19,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
+@SuppressWarnings("WeakerAccess")
 public class SMPOpenActivity extends ListActivity {
     private static final String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
     private SharedPreferences prefs;
@@ -56,27 +57,26 @@ public class SMPOpenActivity extends ListActivity {
             super(context, R.layout.open_item, R.id.filename, items);
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             View row = super.getView(position, convertView, parent);
             final FileData fileData = getItem(position);
+            assert fileData != null;
 
-            ImageButton button = (ImageButton)row.findViewById(R.id.play_button);
+            ImageButton button = row.findViewById(R.id.play_button);
             // Button must be non-focusable or clicks on the row will be ignored.
             // Also, setting android:focusable="false" in the layout doesn't work.
             button.setFocusable(false);
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    prefs.edit()
-                            .putString("state_lastShowFolder", curFolder.getAbsolutePath())
-                            .putString("state_lastPlayFolder", fileData.playPath.getAbsolutePath())
-                            .commit();
-                    Intent data = new Intent();
-                    data.putExtra("path", fileData.playPath.getAbsolutePath());
-                    setResult(RESULT_OK, data);
-                    finish();
-                }
+            button.setOnClickListener(v -> {
+                prefs.edit()
+                        .putString("state_lastShowFolder", curFolder.getAbsolutePath())
+                        .putString("state_lastPlayFolder", fileData.playPath.getAbsolutePath())
+                        .apply();
+                Intent data = new Intent();
+                data.putExtra("path", fileData.playPath.getAbsolutePath());
+                setResult(RESULT_OK, data);
+                finish();
             });
 
             return row;
@@ -108,22 +108,12 @@ public class SMPOpenActivity extends ListActivity {
         }
         setTitle(pathStr);
 
-        ArrayList<FileData> items = new ArrayList<FileData>();
-        FileFilter filter = new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
-            }
-        };
+        ArrayList<FileData> items = new ArrayList<>();
+        FileFilter filter = pathname -> pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
         for (File f : path.listFiles(filter)) {
             items.add(new FileData(f));
         }
-        Collections.sort(items, new Comparator<FileData>() {
-            @Override
-            public int compare(FileData lhs, FileData rhs) {
-                return lhs.toString().compareTo(rhs.toString());
-            }
-        });
+        Collections.sort(items, (lhs, rhs) -> lhs.toString().compareTo(rhs.toString()));
         File parent = path.getParentFile();
         if (parent != null) {
             items.add(0, new FileData(parent, "..", path));

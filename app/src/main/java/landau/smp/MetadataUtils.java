@@ -1,11 +1,13 @@
 package landau.smp;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class MetadataUtils {
     public static String getTitle(SharedPreferences prefs, Song song) {
         String s = song.getTitle();
@@ -51,6 +53,7 @@ public class MetadataUtils {
         return getArtist(prefs, song) + " - " + getAlbum(prefs, song);
     }
 
+    @SuppressLint("DefaultLocale")
     public static String formatTime(int timeMs) {
         int time = (timeMs + 999) / 1000;   // sec, round up
         String sec = String.format("%02d", time % 60);
@@ -64,7 +67,7 @@ public class MetadataUtils {
         return hour + min + ":" + sec;
     }
 
-    private static Map<Character, String> transliterationMap = new HashMap<Character, String>();
+    private static Map<Character, String> transliterationMap = new HashMap<>();
 
     static {
         char[] abcRus = {'а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э','ю','я'};

@@ -1,6 +1,7 @@
 package landau.smp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -31,7 +32,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -59,6 +59,7 @@ public class SMPActivity extends Activity {
     /**
      * Called when the activity is first created.
      */
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,14 +75,9 @@ public class SMPActivity extends Activity {
                                  WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
         }
         gestureDetector = new GestureDetector(this, new SMPGestureDetector(this));
-        seekBar = (SeekBar)findViewById(R.id.barTime);
-        timeLabel = (TextView)findViewById(R.id.lblTime);
-        findViewById(R.id.lytMainSpace).setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                return gestureDetector.onTouchEvent(event);
-            }
-        });
+        seekBar = findViewById(R.id.barTime);
+        timeLabel = findViewById(R.id.lblTime);
+        findViewById(R.id.lytMainSpace).setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -158,6 +154,7 @@ public class SMPActivity extends Activity {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private boolean hasOrRequestPermission(String permission, int requestCode) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
@@ -218,7 +215,7 @@ public class SMPActivity extends Activity {
     }
 
     private void updatePlayButtonText() {
-        ImageButton b = (ImageButton)findViewById(R.id.btnPlayPause);
+        ImageButton b = findViewById(R.id.btnPlayPause);
         if (service.getState() == SMPService.State.PLAYING) {
             b.setImageResource(android.R.drawable.ic_media_pause);
         } else {
@@ -226,6 +223,7 @@ public class SMPActivity extends Activity {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private void onNextSong(Song song) {
         if (song == null) {
             ((TextView)findViewById(R.id.lblTitle)).setText("Select files");
@@ -247,12 +245,7 @@ public class SMPActivity extends Activity {
 
 
     private void getSongListImpl(List<Song> result, File root) {
-        FileFilter filter = new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
-            }
-        };
+        FileFilter filter = pathname -> pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
         File[] files = root.listFiles(filter);
         if (files == null) {
             if (!root.isDirectory()) {
@@ -269,7 +262,7 @@ public class SMPActivity extends Activity {
         }
     }
     private List<Song> getSongList(String path) {
-        List<Song> songs = new ArrayList<Song>();
+        List<Song> songs = new ArrayList<>();
         getSongListImpl(songs, new File(path));
         if (prefs.getBoolean("pref_shuffle", false)) {
             long seed;
@@ -281,12 +274,7 @@ public class SMPActivity extends Activity {
             }
             Collections.shuffle(songs, new Random(seed));
         } else {
-            Collections.sort(songs, new Comparator<Song>() {
-                @Override
-                public int compare(Song lhs, Song rhs) {
-                    return lhs.getFilename().compareTo(rhs.getFilename());
-                }
-            });
+            Collections.sort(songs, (lhs, rhs) -> lhs.getFilename().compareTo(rhs.getFilename()));
         }
         return songs;
     }
@@ -309,6 +297,7 @@ public class SMPActivity extends Activity {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     private class SMPGestureDetector extends GestureDetector.SimpleOnGestureListener {
         private static final double FORBIDDEN_ZONE_MIN = Math.PI / 4 - Math.PI / 12;
         private static final double FORBIDDEN_ZONE_MAX = Math.PI / 4 + Math.PI / 12;

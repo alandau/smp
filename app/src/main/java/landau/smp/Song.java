@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 
+@SuppressWarnings("WeakerAccess")
 public class Song {
     private static final String TAG = Song.class.getSimpleName();
 
