@@ -437,12 +437,20 @@ public class SMPService extends Service {
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setDataSource(filename);
             mediaPlayer.setOnCompletionListener(mp -> {
+                String key = getFileKey(filename);
+                if (prefs.contains(key)) {
+                    prefs.edit().remove(key).apply();
+                }
                 SMPService.this.mediaPlayer = otherMediaPlayer();
                 currentSong = (currentSong + 1) % songList.size();
                 setNotification();
                 prepareNextSong();
             });
             mediaPlayer.prepare();
+            int pos = prefs.getInt(getFileKey(filename), -1);
+            if (pos != -1) {
+                mediaPlayer.seekTo(pos);
+            }
             mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
         } catch (IOException e) {
             Log.e(TAG, "setDataSource failed, path=" + filename, e);
@@ -485,9 +493,24 @@ public class SMPService extends Service {
             return;
         }
         if (mediaPlayer.getDuration() >= minLength * 1000) {
-            prefs.edit().putInt("state_lastPosition", mediaPlayer.getCurrentPosition()).apply();
+            SharedPreferences.Editor editor = prefs.edit();
+            int curPos = mediaPlayer.getCurrentPosition();
+            editor.putInt("state_lastPosition", curPos);
+            if (curPos >= 30*1000 && curPos <= mediaPlayer.getDuration() - 30*1000) {
+                editor.putInt(getFileKey(songList.get(currentSong).getFilename()), curPos);
+            } else {
+                editor.remove(getFileKey(songList.get(currentSong).getFilename()));
+            }
+            editor.apply();
         } else {
-            prefs.edit().remove("state_lastPosition").apply();
+            prefs.edit()
+                    .remove("state_lastPosition")
+                    .remove(getFileKey(songList.get(currentSong).getFilename()))
+                    .apply();
         }
+    }
+
+    private static String getFileKey(String filename) {
+        return "filepos_" + filename;
     }
 }
