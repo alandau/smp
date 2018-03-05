@@ -49,8 +49,7 @@ public class SMPActivity extends Activity {
         public void run() {
             if (service != null) {
                 seekBar.setProgress(service.getCurrentTime() / 1000);
-                timeLabel.setText(String.format("%s / %s", MetadataUtils.formatTime(service.getCurrentTime() / 1000 * 1000),
-                        MetadataUtils.formatTime(service.getDuration())));
+                updateTimeLabel();
                 handler.postDelayed(this, 250);
             }
         }
@@ -83,6 +82,7 @@ public class SMPActivity extends Activity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser && service != null) {
                     service.seek(progress * 1000);
+                    updateTimeLabel();
                 }
             }
             @Override
@@ -214,6 +214,13 @@ public class SMPActivity extends Activity {
         handler.removeCallbacks(seekbarUpdater);
     }
 
+    private void updateTimeLabel() {
+        if (service != null) {
+            timeLabel.setText(String.format("%s / %s", MetadataUtils.formatTime(service.getCurrentTime() / 1000 * 1000),
+                    MetadataUtils.formatTime(service.getDuration())));
+        }
+    }
+
     private void updatePlayButtonText() {
         ImageButton b = findViewById(R.id.btnPlayPause);
         if (service.getState() == SMPService.State.PLAYING) {
@@ -238,9 +245,9 @@ public class SMPActivity extends Activity {
         ((TextView)findViewById(R.id.lblArtist)).setText(MetadataUtils.getArtist(prefs, song));
         ((TextView)findViewById(R.id.lblAlbum)).setText(MetadataUtils.getAlbum(prefs, song));
 
-        seekbarUpdater.run();
         seekBar.setMax((song.getDuration() + 999) / 1000);
         seekBar.setProgress(0);
+        seekbarUpdater.run();
     }
 
 
