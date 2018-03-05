@@ -1,16 +1,20 @@
 package landau.smp;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -81,10 +85,9 @@ public class SMPActivity extends Activity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser) {
-                    return;
+                if (fromUser && service != null) {
+                    service.seek(progress * 1000);
                 }
-                service.seek(progress * 1000);
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -98,15 +101,17 @@ public class SMPActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        bindService(new Intent(this, SMPService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        if (hasOrRequestStoragePermission()) {
+            bindService(new Intent(this, SMPService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
     protected void onStop() {
         if (service != null) {
             service.removeSongChangeNotification();
+            unbindService(serviceConnection);
         }
-        unbindService(serviceConnection);
         stopSeekbarTimer();
         super.onStop();
     }
@@ -114,6 +119,13 @@ public class SMPActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate();
+        }
     }
 
     @Override
@@ -127,7 +139,9 @@ public class SMPActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_open:
-                startActivityForResult(new Intent(this, SMPOpenActivity.class), 1);
+                if (hasOrRequestStoragePermission()) {
+                    startActivityForResult(new Intent(this, SMPOpenActivity.class), 1);
+                }
                 return true;
             case R.id.action_exit:
                 if (service != null) {
@@ -142,6 +156,22 @@ public class SMPActivity extends Activity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private boolean hasOrRequestPermission(String permission, int requestCode) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+            // Permission already granted
+            return true;
+        }
+        requestPermissions(new String[] {permission}, requestCode);
+        return false;
+    }
+
+    private boolean hasOrRequestStoragePermission() {
+        return hasOrRequestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 1);
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
