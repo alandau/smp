@@ -34,7 +34,7 @@ public class SMPService extends Service {
 
     private List<Song> songList;
     private int currentSong;
-    private MediaPlayer mediaPlayer1, mediaPlayer2, mediaPlayer;
+    private MediaPlayer mediaPlayer;
     private Notification.Builder notificationBuilder;
     private SongChangeNotification songChangeNotification;
     private RemoteControlClient remoteControlClient;
@@ -81,9 +81,11 @@ public class SMPService extends Service {
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                     Log.i(TAG, "Lost focus (can duck)");
-                    float volume = Integer.valueOf(prefs.getString("pref_duckVolume", "50")) / 100.0f;
-                    volume = (float)((Math.exp(volume) - 1) / (Math.E - 1));
-                    mediaPlayer.setVolume(volume, volume);
+                    if (mediaPlayer != null) {
+                        float volume = Integer.valueOf(prefs.getString("pref_duckVolume", "50")) / 100.0f;
+                        volume = (float) ((Math.exp(volume) - 1) / (Math.E - 1));
+                        mediaPlayer.setVolume(volume, volume);
+                    }
                     break;
                 default:
                     Log.i(TAG, "Unknown focus state " + focusChange);
@@ -216,22 +218,14 @@ public class SMPService extends Service {
         audioManager.unregisterMediaButtonEventReceiver(new ComponentName(this, SMPMediaButtonReceiver.class));
 
         songChangeNotification = null;
-        stopSelf();
-    }
-
-    private void initMediaPlayers() {
-        if (songList.size() >= 1) {
-            mediaPlayer1 = new MediaPlayer();
-            initMediaPlayer(mediaPlayer1, songList.get(currentSong).getFilename());
-            mediaPlayer = mediaPlayer1;
-
-            // mediaPlayer2 might point to the same song if songList.size() == 1
-            mediaPlayer2 = new MediaPlayer();
-            prepareNextSong();
-            initMediaPlayer(mediaPlayer2, songList.get((currentSong + 1) % songList.size()).getFilename());
-            mediaPlayer1.setNextMediaPlayer(mediaPlayer2);
-            mediaPlayer2.setNextMediaPlayer(mediaPlayer1);
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
         }
+
+        prefs.edit().putInt("state_lastPlayedSong", currentSong).apply();
+
+        stopSelf();
     }
 
     private void pause() {
@@ -262,12 +256,15 @@ public class SMPService extends Service {
             return;
         }
         if (mediaPlayer == null) {
-            initMediaPlayers();
+            if (songList.size() > 0) {
+                mediaPlayer = new MediaPlayer();
+                initMediaPlayer(mediaPlayer, songList.get(currentSong).getFilename());
+            } else {
+                // no songs
+                return;
+            }
         }
-        if (mediaPlayer == null) {
-            // no songs
-            return;
-        }
+
         AudioManager am = (AudioManager)getSystemService(AUDIO_SERVICE);
         assert am != null;
         int result = am.requestAudioFocus(audioFocusListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
@@ -281,16 +278,11 @@ public class SMPService extends Service {
 
     private void stop() {
         saveCurrentPosition();
-        if (mediaPlayer1 != null) {
-            mediaPlayer1.release();
-            mediaPlayer1 = null;
-        }
-        if (mediaPlayer2 != null) {
-            mediaPlayer2.release();
-            mediaPlayer2 = null;
-        }
-        mediaPlayer = null;
         updateState(State.STOPPED);
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     public void playpause() {
@@ -308,7 +300,6 @@ public class SMPService extends Service {
     public void prev() {
         if (mediaPlayer != null) {
             currentSong = (currentSong - 2 + songList.size()) % songList.size();
-            prepareNextSong();
             next();
         }
     }
@@ -380,14 +371,6 @@ public class SMPService extends Service {
         }
     }
 
-    private MediaPlayer otherMediaPlayer() {
-        if (mediaPlayer == mediaPlayer1) {
-            return mediaPlayer2;
-        } else {
-            return mediaPlayer1;
-        }
-    }
-
     private void setPauseNotificationIcon() {
         notificationBuilder.setSmallIcon(android.R.drawable.ic_media_pause);
         NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
@@ -420,17 +403,6 @@ public class SMPService extends Service {
         notificationManager.notify(1, notificationBuilder.build());
     }
 
-    private void prepareNextSong() {
-        prefs.edit().putInt("state_lastPlayedSong", currentSong).apply();
-        int nextIdx = (currentSong + 1) % songList.size();
-        if (nextIdx >= songList.size()) {
-            return;
-        }
-        MediaPlayer other = otherMediaPlayer();
-        initMediaPlayer(other, songList.get(nextIdx).getFilename());
-        mediaPlayer.setNextMediaPlayer(other);
-    }
-
     private void initMediaPlayer(MediaPlayer mediaPlayer, String filename) {
         mediaPlayer.reset();
         try {
@@ -441,10 +413,10 @@ public class SMPService extends Service {
                 if (prefs.contains(key)) {
                     prefs.edit().remove(key).apply();
                 }
-                SMPService.this.mediaPlayer = otherMediaPlayer();
                 currentSong = (currentSong + 1) % songList.size();
                 setNotification();
-                prepareNextSong();
+                initMediaPlayer(mp, songList.get(currentSong).getFilename());
+                mp.start();
             });
             mediaPlayer.prepare();
             int pos = prefs.getInt(getFileKey(filename), -1);
