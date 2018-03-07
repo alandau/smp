@@ -7,6 +7,11 @@
                 android:title="Shuffle"
                 android:summary="Randomize files for playback"
                 android:defaultValue="false"/>
+        <CheckBoxPreference
+                android:key="pref_showMetadata"
+                android:title="Show metadata"
+                android:summary="Show metadata or file name"
+                android:defaultValue="true"/>
         <ListPreference
                 android:key="pref_rememberPosition"
                 android:title="Remember position within file"

@@ -11,7 +11,7 @@ import java.util.Map;
 public class MetadataUtils {
     public static String getTitle(SharedPreferences prefs, Song song) {
         String s = song.getTitle();
-        if (s == null) {
+        if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getName();
         }
         return s;
@@ -27,7 +27,7 @@ public class MetadataUtils {
 
     public static String getArtist(SharedPreferences prefs, Song song) {
         String s = song.getArtist();
-        if (s == null) {
+        if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getParentFile().getParentFile().getName();
         }
         return s;
@@ -39,7 +39,7 @@ public class MetadataUtils {
 
     public static String getAlbum(SharedPreferences prefs, Song song) {
         String s = song.getAlbum();
-        if (s == null) {
+        if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getParentFile().getName();
         }
         return s;
@@ -97,5 +97,9 @@ public class MetadataUtils {
 
     private static String maybeTransliterate(SharedPreferences prefs, String s) {
         return prefs.getBoolean("pref_transliterate", false) ? transliterate(s) : s;
+    }
+
+    private static boolean showFilename(SharedPreferences prefs) {
+        return !prefs.getBoolean("pref_showMetadata", true);
     }
 }
