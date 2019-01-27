@@ -3,9 +3,12 @@ package landau.smp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.KeyEvent;
 
 public class SMPMediaButtonReceiver extends BroadcastReceiver {
+    private static final String TAG = SMPMediaButtonReceiver.class.getSimpleName();
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
@@ -52,7 +55,15 @@ public class SMPMediaButtonReceiver extends BroadcastReceiver {
                 Intent i = new Intent(context, SMPService.class);
                 i.setAction(SMPService.MEDIA_BUTTON_ACTION);
                 i.putExtra(SMPService.MEDIA_BUTTON_COMMAND, command.name());
-                context.startService(i);
+                try {
+                    context.startService(i);
+                } catch (Exception ex) {
+                    // Starting a service causes the following exception:
+                    // java.lang.RuntimeException: Unable to start receiver landau.smp.SMPMediaButtonReceiver:
+                    // java.lang.IllegalStateException: Not allowed to start service Intent ...: app is in background
+                    // This is even though we call unregisterMediaButtonEventReceiver on service shutdown
+                    Log.e(TAG, "Can't startService with command=" + command.name(), ex);
+                }
                 if (isOrderedBroadcast()) {
                     abortBroadcast();
                 }
