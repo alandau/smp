@@ -129,6 +129,10 @@ public class SMPActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.actions, menu);
+        if (!prefs.getString("pref_shutoffTimer", "0").equals("0")) {
+            MenuItem item = menu.findItem(R.id.action_viewShutoff);
+            item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
