@@ -3,6 +3,7 @@ package landau.smp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -148,6 +149,9 @@ public class SMPActivity extends Activity {
                 return true;
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.action_viewShutoff:
+                showShutoffDialog();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -414,5 +418,24 @@ public class SMPActivity extends Activity {
             service.setSongList(getSongList(path));
             service.playpause();
         }
+    }
+
+    private void showShutoffDialog() {
+        if (service == null) {
+            return;
+        }
+        int delay = (int)service.getShutoffDelayMs();
+        String timeoutStr = delay == -1 ? "Never" : MetadataUtils.formatTime(delay);
+        new AlertDialog.Builder(this)
+                .setTitle(String.format("Current timeout: %s\nChoose new timeout:", timeoutStr))
+                .setItems(getResources().getStringArray(R.array.pref_shutoffTimer_entries), (dialog, which) -> {
+                    if (service == null) {
+                        return;
+                    }
+                    String newTimeoutStr = getResources().getStringArray(R.array.pref_shutoffTimer_values)[which];
+                    service.setShutoffDelayResourceStr(newTimeoutStr);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {})
+                .show();
     }
 }

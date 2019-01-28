@@ -505,6 +505,10 @@ public class SMPService extends Service {
             return;
         }
         String timeoutStr = prefs.getString("pref_shutoffTimer", "0");
+        setShutoffDelayResourceStr(timeoutStr);
+    }
+
+    public void setShutoffDelayResourceStr(String timeoutStr) {
         long timeoutMins;
         try {
             timeoutMins = Long.parseLong(timeoutStr);
@@ -512,17 +516,9 @@ public class SMPService extends Service {
             Log.e(TAG, "Can't parse shutoff timer value " + timeoutStr, e);
             return;
         }
-        if (timeoutMins == 0) {
-            // 0 means no shutoff timer
-            return;
-        }
 
-        // Handler's clock is relative to SystemClock.uptimeMillis()
         long delay = timeoutMins * 60 * 1000;
-        shutoffTimerEndTime = SystemClock.uptimeMillis() + delay;
-        shutoffTimer.removeCallbacks(shutoffTimerRunnable);
-        shutoffTimer.postAtTime(shutoffTimerRunnable, shutoffTimerEndTime);
-        Log.i(TAG, "Auto-pause in " + delay + " ms");
+        setShutoffDelayMs(delay);
     }
 
     private void stopShutoffTimer() {
@@ -539,5 +535,17 @@ public class SMPService extends Service {
             return -1;
         }
         return shutoffTimerEndTime - SystemClock.uptimeMillis();
+    }
+
+    public void setShutoffDelayMs(long delay) {
+        if (delay == 0) {
+            // 0 means no shutoff timer
+            stopShutoffTimer();
+            return;
+        }
+        shutoffTimerEndTime = SystemClock.uptimeMillis() + delay;
+        shutoffTimer.removeCallbacks(shutoffTimerRunnable);
+        shutoffTimer.postAtTime(shutoffTimerRunnable, shutoffTimerEndTime);
+        Log.i(TAG, "Auto-pause in " + delay + " ms");
     }
 }
