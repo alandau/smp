@@ -15,8 +15,10 @@ import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -39,6 +41,13 @@ public class SMPService extends Service {
     private SongChangeNotification songChangeNotification;
     private RemoteControlClient remoteControlClient;
     private SharedPreferences prefs;
+    private long shutoffTimerEndTime;
+    private Handler shutoffTimer = new Handler();
+    private Runnable shutoffTimerRunnable = () -> {
+        shutoffTimerEndTime = 0;
+        pause();
+        Log.i(TAG, "Auto-paused");
+    };
 
     public enum State {INVALID, PLAYING, PAUSED, STOPPED}
     private State state = State.INVALID;
@@ -181,6 +190,7 @@ public class SMPService extends Service {
             song.extractMetadata();
             playAfterStop();
             pause();
+            stopShutoffTimer();
             if (prefs.contains("state_lastPosition")) {
                 int position = prefs.getInt("state_lastPosition", 0);
                 seek(position);
@@ -242,6 +252,7 @@ public class SMPService extends Service {
         setNotification();
         mediaPlayer.setVolume(1.0f, 1.0f);
         mediaPlayer.start();
+        maybeStartShutoffTimer();
         updateState(State.PLAYING);
     }
 
@@ -278,6 +289,7 @@ public class SMPService extends Service {
     }
 
     private void stop() {
+        stopShutoffTimer();
         saveCurrentPosition();
         updateState(State.STOPPED);
         if (mediaPlayer != null) {
@@ -485,5 +497,47 @@ public class SMPService extends Service {
 
     private static String getFileKey(String filename) {
         return "filepos_" + filename;
+    }
+
+    private void maybeStartShutoffTimer() {
+        if (shutoffTimerEndTime != 0) {
+            // Timer is already set, do nothing
+            return;
+        }
+        String timeoutStr = prefs.getString("pref_shutoffTimer", "0");
+        long timeoutMins;
+        try {
+            timeoutMins = Long.parseLong(timeoutStr);
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "Can't parse shutoff timer value " + timeoutStr, e);
+            return;
+        }
+        if (timeoutMins == 0) {
+            // 0 means no shutoff timer
+            return;
+        }
+
+        // Handler's clock is relative to SystemClock.uptimeMillis()
+        long delay = timeoutMins * 60 * 1000;
+        shutoffTimerEndTime = SystemClock.uptimeMillis() + delay;
+        shutoffTimer.removeCallbacks(shutoffTimerRunnable);
+        shutoffTimer.postAtTime(shutoffTimerRunnable, shutoffTimerEndTime);
+        Log.i(TAG, "Auto-pause in " + delay + " ms");
+    }
+
+    private void stopShutoffTimer() {
+        if (shutoffTimerEndTime == 0) {
+            return;
+        }
+        Log.i(TAG, "Disabled auto-pause in " + (shutoffTimerEndTime - SystemClock.uptimeMillis()) + " ms");
+        shutoffTimerEndTime = 0;
+        shutoffTimer.removeCallbacks(shutoffTimerRunnable);
+    }
+
+    public long getShutoffDelayMs() {
+        if (shutoffTimerEndTime == 0) {
+            return -1;
+        }
+        return shutoffTimerEndTime - SystemClock.uptimeMillis();
     }
 }

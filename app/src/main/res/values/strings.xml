@@ -31,4 +31,40 @@
         <item>600</item>
         <item>1200</item>
     </string-array>
+    <string-array name="pref_shutoffTimer_entries">
+        <item>Never</item>
+        <item>1 min</item>
+        <item>2 mins</item>
+        <item>3 mins</item>
+        <item>4 mins</item>
+        <item>5 mins</item>
+        <item>10 mins</item>
+        <item>15 mins</item>
+        <item>20 mins</item>
+        <item>30 mins</item>
+        <item>45 mins</item>
+        <item>1 h</item>
+        <item>1 h 15 mins</item>
+        <item>1 h 30 mins</item>
+        <item>1 h 45 mins</item>
+        <item>2 h</item>
+    </string-array>
+    <string-array name="pref_shutoffTimer_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+        <item>30</item>
+        <item>45</item>
+        <item>60</item>
+        <item>75</item>
+        <item>90</item>
+        <item>105</item>
+        <item>120</item>
+    </string-array>
 </resources>
