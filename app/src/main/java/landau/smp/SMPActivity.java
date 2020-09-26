@@ -30,7 +30,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -260,8 +259,7 @@ public class SMPActivity extends Activity {
 
 
     private void getSongListImpl(List<Song> result, File root) {
-        FileFilter filter = pathname -> pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
-        File[] files = root.listFiles(filter);
+        File[] files = root.listFiles();
         if (files == null) {
             if (!root.isDirectory()) {
                 result.add(new Song(root.getAbsolutePath()));

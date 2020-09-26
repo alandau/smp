@@ -1,7 +1,6 @@
 package landau.smp;
 
 import android.media.MediaMetadataRetriever;
-import android.util.Log;
 
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -32,9 +31,11 @@ public class Song {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(filename);
-        } catch (IllegalArgumentException e) {
+        } catch (RuntimeException e) {
+            // IllegalArgumentException (child of RuntimeException) is thrown if file is not found
+            // or can't be opened. RuntimeException itself is thrown if metadata can't be extracted,
+            // e.g. if it's a non-audio file. In this case, do nothing.
             retriever.release();
-            Log.e(TAG, "Can't read metadata of " + filename, e);
             return;
         }
         artist = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ARTIST, 26);

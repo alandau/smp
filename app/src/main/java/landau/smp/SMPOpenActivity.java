@@ -16,7 +16,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -109,8 +108,7 @@ public class SMPOpenActivity extends ListActivity {
         setTitle(pathStr);
 
         ArrayList<FileData> items = new ArrayList<>();
-        FileFilter filter = pathname -> pathname.isDirectory() || pathname.getName().toLowerCase().endsWith(".mp3");
-        for (File f : path.listFiles(filter)) {
+        for (File f : path.listFiles()) {
             items.add(new FileData(f));
         }
         Collections.sort(items, (lhs, rhs) -> lhs.toString().compareTo(rhs.toString()));

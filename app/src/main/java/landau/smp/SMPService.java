@@ -267,10 +267,14 @@ public class SMPService extends Service {
         if (state != State.STOPPED) {
             return;
         }
+        registerRemoteControl();
         if (mediaPlayer == null) {
-            if (songList.size() > 0) {
+            if (!songList.isEmpty()) {
                 mediaPlayer = new MediaPlayer();
-                initMediaPlayer(mediaPlayer, songList.get(currentSong).getFilename());
+                if (!initMediaPlayer(mediaPlayer)) {
+                    // no songs
+                    return;
+                }
             } else {
                 // no songs
                 return;
@@ -284,7 +288,6 @@ public class SMPService extends Service {
             Log.e(TAG, "Can't get focus: " + result);
             return;
         }
-        registerRemoteControl();
         playCommon();
     }
 
@@ -416,30 +419,47 @@ public class SMPService extends Service {
         notificationManager.notify(1, notificationBuilder.build());
     }
 
-    private void initMediaPlayer(MediaPlayer mediaPlayer, String filename) {
-        mediaPlayer.reset();
-        try {
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer.setDataSource(filename);
-            mediaPlayer.setOnCompletionListener(mp -> {
-                String key = getFileKey(filename);
-                if (prefs.contains(key)) {
-                    prefs.edit().remove(key).apply();
-                }
-                currentSong = (currentSong + 1) % songList.size();
-                setNotification();
-                initMediaPlayer(mp, songList.get(currentSong).getFilename());
-                mp.start();
-            });
-            mediaPlayer.prepare();
-            int pos = prefs.getInt(getFileKey(filename), -1);
-            if (pos != -1) {
-                mediaPlayer.seekTo(pos);
+    private boolean initMediaPlayer(MediaPlayer mediaPlayer) {
+        MediaPlayer.OnCompletionListener advanceToNextFile = mp -> {
+            if (songList.isEmpty()) {
+                // No playable files, stop
+                stop();
+                return;
             }
-            mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        } catch (IOException e) {
-            Log.e(TAG, "setDataSource failed, path=" + filename, e);
+            String key = getFileKey(songList.get(currentSong).getFilename());
+            if (prefs.contains(key)) {
+                prefs.edit().remove(key).apply();
+            }
+            currentSong = (currentSong + 1) % songList.size();
+            if (initMediaPlayer(mp)) {
+                setNotification();
+                mp.start();
+            }
+        };
+
+        while (!songList.isEmpty()) {
+            mediaPlayer.reset();
+            try {
+                String filename = songList.get(currentSong).getFilename();
+                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mediaPlayer.setDataSource(filename);
+                mediaPlayer.setOnCompletionListener(advanceToNextFile);
+                mediaPlayer.prepare();
+                int pos = prefs.getInt(getFileKey(filename), -1);
+                if (pos != -1) {
+                    mediaPlayer.seekTo(pos);
+                }
+                mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+                return true;
+            } catch (IOException e) {
+                // Thrown if file can't be opened, e.g. if it's a non-audio file
+                songList.remove(currentSong);
+                if (currentSong == songList.size()) {
+                    currentSong = 0;
+                }
+            }
         }
+        return false;
     }
 
     private void registerRemoteControl() {
