@@ -249,6 +249,9 @@ public class SMPService extends Service {
     }
 
     private void playCommon() {
+        if (songList.isEmpty()) {
+            return;
+        }
         setNotification();
         mediaPlayer.setVolume(1.0f, 1.0f);
         mediaPlayer.start();
@@ -258,6 +261,10 @@ public class SMPService extends Service {
 
     private void playAfterPause() {
         if (mediaPlayer == null || state != State.PAUSED) {
+            return;
+        }
+        if (songList.isEmpty()) {
+            stop();
             return;
         }
         playCommon();
@@ -314,7 +321,7 @@ public class SMPService extends Service {
     }
 
     public void prev() {
-        if (mediaPlayer != null) {
+        if (mediaPlayer != null && !songList.isEmpty()) {
             currentSong = (currentSong - 2 + songList.size()) % songList.size();
             next();
         }
@@ -424,6 +431,7 @@ public class SMPService extends Service {
             if (songList.isEmpty()) {
                 // No playable files, stop
                 stop();
+                songChangeNotification.onNextSong(null);
                 return;
             }
             String key = getFileKey(songList.get(currentSong).getFilename());
