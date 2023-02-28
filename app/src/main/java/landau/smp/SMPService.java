@@ -180,7 +180,8 @@ public class SMPService extends Service {
             notificationBuilder = new Notification.Builder(this);
         }
         notificationBuilder
-                .setContentIntent(PendingIntent.getActivity(this, 0, intent, 0))
+                .setContentIntent(PendingIntent.getActivity(this, 0, intent,
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_IMMUTABLE : 0))
                 .setSmallIcon(android.R.drawable.ic_media_pause)
                 .setContentTitle(getText(R.string.app_name));
         startForeground(1, notificationBuilder.build());
@@ -474,12 +475,22 @@ public class SMPService extends Service {
         ComponentName eventReceiver = new ComponentName(this, SMPMediaButtonReceiver.class);
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         assert audioManager != null;
-        audioManager.registerMediaButtonEventReceiver(eventReceiver);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            mediaButtonIntent.setComponent(eventReceiver);
+            // Has to be FLAG_MUTABLE so the system can add the keycode extra to the intent it broadcasts
+            PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent, PendingIntent.FLAG_MUTABLE);
+            audioManager.registerMediaButtonEventReceiver(mediaPendingIntent);
+        } else {
+            audioManager.registerMediaButtonEventReceiver(eventReceiver);
+        }
+
 
         // build the PendingIntent for the remote control client
         Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
         mediaButtonIntent.setComponent(eventReceiver);
-        PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent, 0);
+        PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, mediaButtonIntent,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ? PendingIntent.FLAG_MUTABLE : 0);
         // create and register the remote control client
         remoteControlClient = new RemoteControlClient(mediaPendingIntent);
         audioManager.registerRemoteControlClient(remoteControlClient);
