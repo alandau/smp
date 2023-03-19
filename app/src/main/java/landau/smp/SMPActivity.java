@@ -92,6 +92,22 @@ public class SMPActivity extends Activity {
             public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
+        
+     /**
+     * https://codelabs.developers.google.com/codelabs/developing-android-a11y-service#0
+     */
+        final ImageButton b1 = findViewById(R.id.b1);
+        b1.setOnClickListener(v -> {
+            AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+        });
+        final ImageButton b2 = findViewById(R.id.b2);
+        b2.setOnClickListener(v -> {
+            AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                    AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+        });
     }
 
     @Override
