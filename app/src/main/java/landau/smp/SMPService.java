@@ -322,14 +322,14 @@ public class SMPService extends Service {
     }
 
     public void prev() {
-        if (mediaPlayer != null && !songList.isEmpty()) {
+        if (mediaPlayer != null && !songList.isEmpty() && songList.size() != 1) {
             currentSong = (currentSong - 2 + songList.size()) % songList.size();
             next();
         }
     }
 
     public void next() {
-        if (mediaPlayer != null) {
+        if (mediaPlayer != null && !songList.isEmpty() && songList.size() != 1) {
             mediaPlayer.seekTo(mediaPlayer.getDuration());
             if (state == State.PAUSED) {
                 playpause();
