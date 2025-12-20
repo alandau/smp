@@ -12,14 +12,17 @@
             android:layout_weight="1"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true">
+
         <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Select files"
-                android:id="@+id/lblTitle" android:textSize="50sp"
-                android:gravity="center_horizontal"
-                android:singleLine="false"
-                android:maxHeight="300dp" android:textStyle="bold"/>
+            android:id="@+id/lblTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:maxHeight="300dp"
+            android:singleLine="false"
+            android:text="Select files"
+            android:textSize="50sp"
+            android:textStyle="bold" />
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

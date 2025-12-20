@@ -186,7 +186,7 @@ public class SMPService extends Service {
                 .setContentTitle(getText(R.string.app_name));
         startForeground(1, notificationBuilder.build());
         this.songChangeNotification = songChangeNotification;
-        if (songList.size() > 0) {
+        if (!songList.isEmpty()) {
             Song song = songList.get(currentSong);
             song.extractMetadata();
             playAfterStop();
@@ -196,7 +196,8 @@ public class SMPService extends Service {
                 int position = prefs.getInt("state_lastPosition", 0);
                 seek(position);
             }
-            songChangeNotification.onNextSong(song);
+            // playAfterStop can remove non-playable items resulting in an empty list
+            songChangeNotification.onNextSong(songList.isEmpty() ? null : song);
         }
     }
 
@@ -460,7 +461,7 @@ public class SMPService extends Service {
                 }
                 mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
                 return true;
-            } catch (IOException e) {
+            } catch (IOException|IllegalStateException e) {
                 // Thrown if file can't be opened, e.g. if it's a non-audio file
                 songList.remove(currentSong);
                 if (currentSong == songList.size()) {

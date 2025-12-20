@@ -2,6 +2,7 @@ package landau.smp;
 
 import android.media.MediaMetadataRetriever;
 
+import java.io.IOException;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
@@ -35,7 +36,9 @@ public class Song {
             // IllegalArgumentException (child of RuntimeException) is thrown if file is not found
             // or can't be opened. RuntimeException itself is thrown if metadata can't be extracted,
             // e.g. if it's a non-audio file. In this case, do nothing.
-            retriever.release();
+            try {
+                retriever.release();
+            } catch (IOException ignored) {}
             return;
         }
         artist = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ARTIST, 26);
@@ -46,7 +49,9 @@ public class Song {
         } catch (NumberFormatException e) {
             durationMs = 0;
         }
-        retriever.release();
+        try {
+            retriever.release();
+        } catch (IOException ignored) {}
         extracted = true;
     }
 

@@ -7,7 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -108,7 +108,11 @@ public class SMPOpenActivity extends ListActivity {
         setTitle(pathStr);
 
         ArrayList<FileData> items = new ArrayList<>();
-        for (File f : path.listFiles()) {
+        File[] files = path.listFiles();
+        if (files == null) {
+            files = new File[0];
+        }
+        for (File f : files) {
             items.add(new FileData(f));
         }
         Collections.sort(items, (lhs, rhs) -> lhs.toString().compareTo(rhs.toString()));

@@ -16,7 +16,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -28,6 +27,8 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -118,7 +119,7 @@ public class SMPActivity extends Activity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, int[] grantResults) {
         if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             recreate();
         }
@@ -137,28 +138,27 @@ public class SMPActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_open:
-                if (hasOrRequestStoragePermission()) {
-                    startActivityForResult(new Intent(this, SMPOpenActivity.class), 1);
-                }
-                return true;
-            case R.id.action_exit:
-                if (service != null) {
-                    service.removeSongChangeNotification();
-                    service.deinit();
-                }
-                finish();
-                return true;
-            case R.id.action_settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            case R.id.action_viewShutoff:
-                showShutoffDialog();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_open) {
+            if (hasOrRequestStoragePermission()) {
+                startActivityForResult(new Intent(this, SMPOpenActivity.class), 1);
+            }
+            return true;
+        } else if (itemId == R.id.action_exit) {
+            if (service != null) {
+                service.removeSongChangeNotification();
+                service.deinit();
+            }
+            finish();
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
+        } else if (itemId == R.id.action_viewShutoff) {
+            showShutoffDialog();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -175,7 +175,10 @@ public class SMPActivity extends Activity {
     }
 
     private boolean hasOrRequestStoragePermission() {
-        return hasOrRequestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, 1);
+        String permission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                ? Manifest.permission.READ_EXTERNAL_STORAGE
+                : Manifest.permission.READ_MEDIA_AUDIO;
+        return hasOrRequestPermission(permission, 1);
     }
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
