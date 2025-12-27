@@ -66,4 +66,16 @@
         <item>105</item>
         <item>120</item>
     </string-array>
+    <string-array name="pref_recent_entries">
+        <item>None</item>
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+    </string-array>
+    <string-array name="pref_recent_values">
+        <item>0</item>
+        <item>3</item>
+        <item>5</item>
+        <item>10</item>
+    </string-array>
 </resources>

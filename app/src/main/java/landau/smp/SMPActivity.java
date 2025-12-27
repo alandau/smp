@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -133,6 +134,10 @@ public class SMPActivity extends Activity {
             MenuItem item = menu.findItem(R.id.action_viewShutoff);
             item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
+        if (!prefs.getString("pref_recentCount", "5").equals("0")) {
+            MenuItem item = menu.findItem(R.id.action_recent);
+            item.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        }
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -156,6 +161,9 @@ public class SMPActivity extends Activity {
             return true;
         } else if (itemId == R.id.action_viewShutoff) {
             showShutoffDialog();
+            return true;
+        } else if (itemId == R.id.action_recent) {
+            showRecentsDialog();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -202,7 +210,11 @@ public class SMPActivity extends Activity {
             };
             service = ((SMPService.SMPServiceBinder)binder).getService();
             if (service.getState() == SMPService.State.INVALID) {
-                String path = prefs.getString("state_lastPlayFolder", Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath());
+                String path = prefs.getString("state_lastPlayFolder", "");
+                if (path.isEmpty()) {
+                    path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
+                    prefs.edit().putString("state_lastPlayFolder", path).commit();
+                }
                 service.init(getSongList(path), onchange);
             } else {
                 service.connect(onchange);
@@ -413,18 +425,40 @@ public class SMPActivity extends Activity {
             return;
         }
 
-        String path = data.getStringExtra("path");
+        String newPath = data.getStringExtra("path");
+        playNewPath(newPath);
+    }
+
+    private void playNewPath(String newPath) {
+        String oldPath = prefs.getString("state_lastPlayFolder", "");
+        String recentsString = prefs.getString("state_recentPaths", "");
+        ArrayList<String> recents = recentsString.isEmpty()
+                ? new ArrayList<>()
+                : new ArrayList<String>(Arrays.asList(recentsString.split(":")));
+        while (recents.remove(newPath)) {}  // Remove all
+        if (!oldPath.isEmpty() && !oldPath.equals(newPath)) {
+            recents.add(oldPath);
+        }
+
+        int recentCount = 5;
+        try {
+            recentCount = Integer.parseInt(prefs.getString("pref_recentCount", "5"));
+        } catch (NumberFormatException ignored) {}
+        while (recents.size() > recentCount) {
+            recents.remove(0);
+        }
+
         prefs.edit()
-                .putString("state_lastPlayFolder", path)
+                .putString("state_lastPlayFolder", newPath)
                 .remove("state_lastShuffleSeed")
                 .remove("state_lastPlayedSong")
+                .putString("state_recentPaths", String.join(":", recents))
                 .apply();
         if (service != null) {
-            service.setSongList(getSongList(path));
+            service.setSongList(getSongList(newPath));
             service.playpause();
         }
     }
-
     private void showShutoffDialog() {
         if (service == null) {
             return;
@@ -440,6 +474,32 @@ public class SMPActivity extends Activity {
                     String newTimeoutStr = getResources().getStringArray(R.array.pref_shutoffTimer_values)[which];
                     service.setShutoffDelayResourceStr(newTimeoutStr);
                 })
+                .setNegativeButton("Cancel", (dialog, which) -> {})
+                .show();
+    }
+
+    private void showRecentsDialog() {
+        String currentPath = prefs.getString("state_lastPlayFolder", "");
+        String recentsString = prefs.getString("state_recentPaths", "");
+        ArrayList<String> recents = recentsString.isEmpty()
+                ? new ArrayList<>()
+                : new ArrayList<String>(Arrays.asList(recentsString.split(":")));
+        if (!currentPath.isEmpty()) {
+            recents.add(currentPath);
+        }
+        Collections.reverse(recents);
+
+        CharSequence[] recentTitles = new CharSequence[recents.size()];
+        for (int i = 0; i < recents.size(); i++) {
+            String fullPath = recents.get(i);
+            recentTitles[i] = fullPath.startsWith(SMPOpenActivity.rootPath)
+                    ? fullPath.substring(SMPOpenActivity.rootPath.length())
+                    : fullPath;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle("Recent items")
+                .setItems(recentTitles, (dialog, which) -> playNewPath(recents.get(which)))
                 .setNegativeButton("Cancel", (dialog, which) -> {})
                 .show();
     }

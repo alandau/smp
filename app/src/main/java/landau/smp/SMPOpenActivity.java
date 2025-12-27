@@ -22,7 +22,7 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class SMPOpenActivity extends ListActivity {
-    private static final String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
+    public static final String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator;
     private SharedPreferences prefs;
     private File curFolder;
 
@@ -70,7 +70,6 @@ public class SMPOpenActivity extends ListActivity {
             button.setOnClickListener(v -> {
                 prefs.edit()
                         .putString("state_lastShowFolder", curFolder.getAbsolutePath())
-                        .putString("state_lastPlayFolder", fileData.playPath.getAbsolutePath())
                         .apply();
                 Intent data = new Intent();
                 data.putExtra("path", fileData.playPath.getAbsolutePath());

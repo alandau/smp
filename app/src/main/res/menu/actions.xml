@@ -5,6 +5,9 @@
           android:icon="@android:drawable/ic_menu_search"
           android:showAsAction="ifRoom"
           android:title="Select music"/>
+    <item android:id="@+id/action_recent"
+          android:icon="@android:drawable/ic_menu_revert"
+          android:title="Recent"/>
     <item android:id="@+id/action_viewShutoff"
           android:icon="@android:drawable/ic_menu_recent_history"
           android:title="Auto-pause"/>

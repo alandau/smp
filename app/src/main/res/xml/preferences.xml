@@ -27,6 +27,13 @@
                 android:entryValues="@array/pref_duckVolume_values"
                 android:defaultValue="50"/>
         <ListPreference
+            android:key="pref_recentCount"
+            android:title="Number of recent items to remember"
+            android:summary="%s"
+            android:entries="@array/pref_recent_entries"
+            android:entryValues="@array/pref_recent_values"
+            android:defaultValue="5"/>
+        <ListPreference
                 android:key="pref_shutoffTimer"
                 android:title="Auto pause after timeout"
                 android:summary="%s"
