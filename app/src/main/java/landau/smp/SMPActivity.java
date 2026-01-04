@@ -43,10 +43,10 @@ public class SMPActivity extends Activity {
     private SMPService service;
     private SharedPreferences prefs;
     private GestureDetector gestureDetector;
-    private Handler handler = new Handler();
+    private final Handler handler = new Handler();
     private SeekBar seekBar;
     private TextView timeLabel;
-    private Runnable seekbarUpdater = new Runnable() {
+    private final Runnable seekbarUpdater = new Runnable() {
         @Override
         public void run() {
             if (service != null) {
@@ -64,9 +64,11 @@ public class SMPActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //noinspection deprecation
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         setContentView(R.layout.main);
         startService(new Intent(this, SMPService.class));
+        //noinspection deprecation
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getBoolean("pref_keepScreenOn", false)) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -123,7 +125,7 @@ public class SMPActivity extends Activity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             recreate();
         }
@@ -192,7 +194,7 @@ public class SMPActivity extends Activity {
         return hasOrRequestPermission(permission, 1);
     }
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             SMPService.SongChangeNotification onchange = new SMPService.SongChangeNotification() {
@@ -216,7 +218,7 @@ public class SMPActivity extends Activity {
                 String path = prefs.getString("state_lastPlayFolder", "");
                 if (path.isEmpty()) {
                     path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getAbsolutePath();
-                    prefs.edit().putString("state_lastPlayFolder", path).commit();
+                    prefs.edit().putString("state_lastPlayFolder", path).apply();
                 }
                 service.init(getSongList(path), onchange);
             } else {
@@ -305,6 +307,7 @@ public class SMPActivity extends Activity {
             }
             Collections.shuffle(songs, new Random(seed));
         } else {
+            //noinspection ComparatorCombinators (not available in API 16)
             Collections.sort(songs, (lhs, rhs) -> lhs.getFilename().compareTo(rhs.getFilename()));
         }
         return songs;
@@ -316,7 +319,7 @@ public class SMPActivity extends Activity {
         }
     }
 
-    public void onPrevCick(View view) {
+    public void onPrevClick(View view) {
         if (service != null) {
             service.prev();
         }
@@ -344,18 +347,18 @@ public class SMPActivity extends Activity {
         }
 
         @Override
-        public boolean onDown(MotionEvent e) {
+        public boolean onDown(@NonNull MotionEvent e) {
             return true;
         }
 
         @Override
-        public boolean onDoubleTap(MotionEvent e) {
+        public boolean onDoubleTap(@NonNull MotionEvent e) {
             onBtnPlayPause(null);
             return false;
         }
 
         @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
             float velocitySquared = velocityX*velocityX + velocityY*velocityY;
             if (velocitySquared < MIN_VELOCITY_PX * MIN_VELOCITY_PX) {
                 // too slow
@@ -391,7 +394,7 @@ public class SMPActivity extends Activity {
         }
 
         @Override
-        public void onLongPress(MotionEvent e) {
+        public void onLongPress(@NonNull MotionEvent e) {
             Log.i(TAG, "long press");
         }
 
@@ -401,7 +404,7 @@ public class SMPActivity extends Activity {
         }
 
         protected boolean onFlingLeft() {
-            onPrevCick(null);
+            onPrevClick(null);
             return true;
         }
 
@@ -437,7 +440,8 @@ public class SMPActivity extends Activity {
         String recentsString = prefs.getString("state_recentPaths", "");
         ArrayList<String> recents = recentsString.isEmpty()
                 ? new ArrayList<>()
-                : new ArrayList<String>(Arrays.asList(recentsString.split(":")));
+                : new ArrayList<>(Arrays.asList(recentsString.split(":")));
+        //noinspection StatementWithEmptyBody
         while (recents.remove(newPath)) {}  // Remove all
         if (!oldPath.isEmpty() && !oldPath.equals(newPath)) {
             recents.add(oldPath);
@@ -486,7 +490,7 @@ public class SMPActivity extends Activity {
         String recentsString = prefs.getString("state_recentPaths", "");
         ArrayList<String> recents = recentsString.isEmpty()
                 ? new ArrayList<>()
-                : new ArrayList<String>(Arrays.asList(recentsString.split(":")));
+                : new ArrayList<>(Arrays.asList(recentsString.split(":")));
         recents.add(currentPath);
         Collections.reverse(recents);
 

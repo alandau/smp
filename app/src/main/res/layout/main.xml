@@ -69,7 +69,7 @@
                 android:padding="10dp"
                 android:src="@android:drawable/ic_media_previous"
                 android:id="@+id/btnPrev"
-                android:onClick="onPrevCick"
+                android:onClick="onPrevClick"
                 android:background="@android:color/holo_blue_dark"/>
         <ImageButton
                 android:layout_width="wrap_content"
