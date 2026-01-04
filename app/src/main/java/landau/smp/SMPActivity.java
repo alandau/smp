@@ -484,9 +484,7 @@ public class SMPActivity extends Activity {
         ArrayList<String> recents = recentsString.isEmpty()
                 ? new ArrayList<>()
                 : new ArrayList<String>(Arrays.asList(recentsString.split(":")));
-        if (!currentPath.isEmpty()) {
-            recents.add(currentPath);
-        }
+        recents.add(currentPath);
         Collections.reverse(recents);
 
         CharSequence[] recentTitles = new CharSequence[recents.size()];
@@ -497,10 +495,32 @@ public class SMPActivity extends Activity {
                     : fullPath;
         }
 
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle("Recent items")
-                .setItems(recentTitles, (dialog, which) -> playNewPath(recents.get(which)))
-                .setNegativeButton("Cancel", (dialog, which) -> {})
-                .show();
+                .setItems(recentTitles, (dlg, which) -> playNewPath(recents.get(which)))
+                .create();
+        dialog.getListView().setOnItemLongClickListener((parent, view, position, id) -> {
+            if (position == 0) {
+                // Can't delete currently playing item
+                return true;
+            }
+            dialog.dismiss();
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete?")
+                    .setMessage(recentTitles[position])
+                    .setNegativeButton("Cancel", (dlg, which1) -> {})
+                    .setPositiveButton("Delete", (dlg, which1) -> {
+                        recents.remove(position);
+                        recents.remove(0);
+                        Collections.reverse(recents);
+                        prefs.edit()
+                                .putString("state_recentPaths", String.join(":", recents))
+                                .apply();
+                    })
+                    .show();
+            return true;
+
+        });
+        dialog.show();
     }
 }
