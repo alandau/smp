@@ -102,6 +102,9 @@ public class SMPActivity extends Activity {
         if (hasOrRequestStoragePermission()) {
             bindService(new Intent(this, SMPService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasOrRequestPermission(Manifest.permission.POST_NOTIFICATIONS, 2);
+        }
     }
 
     @Override
