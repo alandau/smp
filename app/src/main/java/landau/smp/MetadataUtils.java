@@ -67,11 +67,13 @@ public class MetadataUtils {
         return hour + min + ":" + sec;
     }
 
-    private static Map<Character, String> transliterationMap = new HashMap<>();
+    private static final Map<Character, String> transliterationMap = new HashMap<>();
 
     static {
-        char[] abcRus = {'а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э','ю','я'};
-        String[] abcEng = {"a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sh'","","y","","e","yu","ya"};
+        char[] abcRus = {'а','б','в','г','д','е','ё','ж','з','и','й','к','л','м','н','о','п','р','с','т','у','ф','х','ц','ч','ш','щ','ъ','ы','ь','э','ю','я',
+                'ґ','є','і','ї'};
+        String[] abcEng = {"a","b","v","g","d","e","e","zh","z","i","y","k","l","m","n","o","p","r","s","t","u","f","h","ts","ch","sh","sh'","","y","","e","yu","ya",
+                "g","ye","i","yi"};
         for (int i = 0; i < abcRus.length; i++) {
             transliterationMap.put(abcRus[i], abcEng[i]);
             String upcase = "";
