@@ -21,6 +21,8 @@ public class Song {
 
     private static final CharsetEncoder[] encoders = {
             Charset.forName("windows-1252").newEncoder(),
+            Charset.forName("windows-1253").newEncoder(),
+            Charset.forName("windows-1256").newEncoder(),
             Charset.forName("EUC-JP").newEncoder(),
             Charset.forName("GBK").newEncoder(),
             Charset.forName("Shift_JIS").newEncoder(),
@@ -70,6 +72,34 @@ public class Song {
     public String getTitle() { return title; }
     public int getDuration() { return durationMs; }
 
+    private boolean isMaybeKoi8(String s) {
+        boolean seenNonRuLetter = false;
+        int state = 0; // 0 - non-letter, 1 - capital, 2 - small
+        for (char c : s.toCharArray()) {
+            switch (state) {
+                case 0:
+                    if (c >= 'А' && c <= 'Я') state = 1; // capital at word start -> maybe koi (e.g. second word)
+                    else if (c >= 'а' && c <= 'я') state = 2;
+                    // else, non-letter -> same state
+                    break;
+                case 1:
+                    if (c >= 'а' && c <= 'я') return false; // small after capital -> not koi
+                    //noinspection StatementWithEmptyBody
+                    if (c >= 'А' && c <= 'Я') { /* do nothing */} // capital after capital -> maybe koi
+                    else state = 0; // non-letter after capital
+                    break;
+                case 2:
+                    if (c >= 'а' && c <= 'я') return false; // small after small -> not koi
+                    if (c >= 'А' && c <= 'Я') state = 1; // capital after small -> maybe koi
+                    else state = 0; // non-letter after small -> maybe koi
+                    break;
+            }
+            if (state != 0) {
+                seenNonRuLetter = true;
+            }
+        }
+        return seenNonRuLetter;
+    }
     private boolean isNameGood(String s) {
         int badChars = 0;
         for (int i = 0; i < s.length(); i = s.offsetByCodePoints(i, 1)) {
@@ -94,12 +124,12 @@ public class Song {
         }
 
         /*
-        for (Map.Entry<String,Charset> d: Charset.availableCharsets().entrySet()) {
-            for (Map.Entry<String,Charset> e: Charset.availableCharsets().entrySet()) {
+        for (java.util.Map.Entry<String,Charset> d: Charset.availableCharsets().entrySet()) {
+            for (java.util.Map.Entry<String,Charset> e: Charset.availableCharsets().entrySet()) {
 //                CharBuffer res = Charset.forName("windows-1251").decode(e.getValue().encode(CharBuffer.wrap(s)));
                 CharBuffer res = d.getValue().decode(e.getValue().encode(CharBuffer.wrap(s)));
                 if (res.length() != 0 && res.get(0) >= 'А' && res.get(0) <= 'Я')
-                    Log.i(TAG, d.getKey() + ","+e.getKey() + ": " + res);
+                    android.util.Log.i(TAG, d.getKey() + ","+e.getKey() + ": " + res);
             }
         }
         */
@@ -111,6 +141,17 @@ public class Song {
             }
         } catch (CharacterCodingException e) {
             // continue
+        }
+
+        if (isNameGood(s) && isMaybeKoi8(s)) {
+            try {
+                String fixed = decoder.decode(Charset.forName("KOI8-R").encode(CharBuffer.wrap(s))).toString();
+                if (isNameGood(fixed)) {
+                    return fixed;
+                }
+            } catch (CharacterCodingException e) {
+                // continue
+            }
         }
         if (isNameGood(s)) {
             return s;
