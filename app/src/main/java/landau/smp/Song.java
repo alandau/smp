@@ -2,7 +2,10 @@ package landau.smp;
 
 import android.media.MediaMetadataRetriever;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
@@ -39,6 +42,10 @@ public class Song {
         if (extracted) {
             return;
         }
+
+        manuallyExtractId3V1();
+        // Still need Android's extractor to get duration
+
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(filename);
@@ -51,9 +58,12 @@ public class Song {
             } catch (IOException ignored) {}
             return;
         }
-        artist = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ARTIST, 26);
-        album = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ALBUM, 25);
-        title = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_TITLE, 31);
+        if (artist == null)
+            artist = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ARTIST, 26);
+        if (album == null)
+            album = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_ALBUM, 25);
+        if (title == null)
+            title = getTagWithFallback(retriever, MediaMetadataRetriever.METADATA_KEY_TITLE, 31);
         try {
             //noinspection DataFlowIssue (extractMetadata may return null)
             durationMs = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
@@ -71,6 +81,49 @@ public class Song {
     public String getAlbum() { return album; }
     public String getTitle() { return title; }
     public int getDuration() { return durationMs; }
+
+    private void manuallyExtractId3V1() {
+        byte[] tagBytes = new byte[128];
+        try (RandomAccessFile raf = new RandomAccessFile(filename, "r")) {
+            long fileSize = raf.length();
+            if (fileSize < 128) {
+                return;
+            }
+            // ID3v1 is at 128 bytes before EOF
+            raf.seek(fileSize - 128);
+            raf.readFully(tagBytes);
+        } catch (FileNotFoundException e) {
+            return;
+        } catch (IOException e) {
+            return;
+        }
+
+        if (tagBytes[0] != 'T' || tagBytes[1] != 'A' || tagBytes[2] != 'G') {
+            // Not a ID3v1
+            return;
+        }
+
+        title = readId3V1String(tagBytes, 3, 30);
+        artist = readId3V1String(tagBytes, 33, 30);
+        album = readId3V1String(tagBytes, 63, 30);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private String readId3V1String(byte[] buffer, int offset, int len) {
+        CharBuffer result;
+        try {
+            result = utf8decoder.decode(ByteBuffer.wrap(buffer, offset, len));
+        } catch (CharacterCodingException e) {
+            try {
+                result = decoder.decode(ByteBuffer.wrap(buffer, offset, len));
+            } catch (CharacterCodingException ex) {
+                return null;
+            }
+        }
+        // trim() removes \0 padding at the end
+        String trimmed = result.toString().trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 
     private boolean isMaybeKoi8(String s) {
         boolean seenNonRuLetter = false;
