@@ -14,6 +14,9 @@ public class MetadataUtils {
         if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getName();
         }
+        if (prefs.getBoolean("pref_underscore", true)) {
+            s = s.replace('_', ' ');
+        }
         return s;
     }
 
@@ -30,6 +33,9 @@ public class MetadataUtils {
         if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getParentFile().getParentFile().getName();
         }
+        if (prefs.getBoolean("pref_underscore", true)) {
+            s = s.replace('_', ' ');
+        }
         return s;
     }
 
@@ -41,6 +47,9 @@ public class MetadataUtils {
         String s = song.getAlbum();
         if (s == null || showFilename(prefs)) {
             s = new File(song.getFilename()).getParentFile().getName();
+        }
+        if (prefs.getBoolean("pref_underscore", true)) {
+            s = s.replace('_', ' ');
         }
         return s;
     }

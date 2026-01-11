@@ -54,5 +54,9 @@
             android:key="pref_transliterate"
             android:title="Transliterate on Bluetooth"
             android:defaultValue="false"/>
+        <CheckBoxPreference
+            android:key="pref_underscore"
+            android:title="Replace undersores with spaces"
+            android:defaultValue="true"/>
     </PreferenceCategory>
 </PreferenceScreen>
