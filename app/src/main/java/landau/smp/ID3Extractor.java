@@ -197,7 +197,7 @@ public class ID3Extractor {
                 if (offset + 6 >= size) {
                     return;
                 }
-                int dataSize = (tag[offset + 3] << 16) | (tag[offset + 4] << 8) | tag[offset + 5];
+                int dataSize = ((tag[offset + 3] & 0xff) << 16) | ((tag[offset + 4] & 0xff) << 8) | (tag[offset + 5] & 0xff);
                 if (offset + 6 + dataSize > size) {
                     return;
                 }
@@ -228,7 +228,7 @@ public class ID3Extractor {
                 if (offset + 10 + dataSize > size) {
                     return;
                 }
-                int frameFlags = (tag[offset + 8] << 8) | tag[offset + 9];
+                int frameFlags = ((tag[offset + 8] & 0xff) << 8) | (tag[offset + 9] & 0xff);
                 if (((version == 3 && (frameFlags & 0xc0) != 0)) || (version == 4 && (frameFlags & 0x0c) != 0)) {
                     // Skip unsupported compressed or encrypted frame
                     offset += 10 + dataSize;
@@ -255,11 +255,17 @@ public class ID3Extractor {
     }
 
     private int readUnsynchronizedInt(byte[] buffer, int offset) {
-        return (buffer[offset] << 21) | (buffer[offset + 1] << 14) | (buffer[offset + 2] << 7) | buffer[offset + 3];
+        return ((buffer[offset] & 0xff) << 21) |
+                ((buffer[offset + 1] & 0xff) << 14) |
+                ((buffer[offset + 2] & 0xff) << 7) |
+                (buffer[offset + 3] & 0xff);
     }
 
     private int readIntBe(byte[] buffer, int offset) {
-        return (buffer[offset] << 24) | (buffer[offset + 1] << 16) | (buffer[offset + 2] << 8) | buffer[offset + 3];
+        return ((buffer[offset] & 0xff) << 24) |
+                ((buffer[offset + 1] & 0xff) << 16) |
+                ((buffer[offset + 2] & 0xff) << 8) |
+                (buffer[offset + 3] & 0xff);
     }
 
     private String textFromBytes(byte[] buf, int offset, int len) {
