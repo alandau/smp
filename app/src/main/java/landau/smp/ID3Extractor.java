@@ -10,6 +10,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
+// Spec: https://mutagen-specs.readthedocs.io/en/latest/id3/index.html
+// Spec: https://web.archive.org/web/20151121080450/http://id3.org/id3v2.3.0
+// AOSP Implementation: https://github.com/cozybit/aosp-frameworks-base/blob/master/media/libstagefright/id3/ID3.cpp
+// AOSP Implementation: https://cs.android.com/android/platform/superproject/main/+/main:frameworks/av/media/module/id3/ID3.cpp
 public class ID3Extractor {
     // Maximum ID3v2 tag length
     static int kMaxSize = 3 * 1024 * 1024;
