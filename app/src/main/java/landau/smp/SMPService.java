@@ -64,10 +64,6 @@ public class SMPService extends Service {
                     switch (prevFocusState) {
                         case UNKNOWN:
                         case AudioManager.AUDIOFOCUS_LOSS:
-                            if (stateWhenLostFocus == State.PLAYING) {
-                                playAfterStop();
-                            }
-                            break;
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                             if (stateWhenLostFocus == State.PLAYING) {
                                 playAfterPause();
@@ -79,12 +75,8 @@ public class SMPService extends Service {
                     }
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS:
-                    Log.i(TAG, "Lost focus");
-                    stateWhenLostFocus = getState();
-                    stop();
-                    break;
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                    Log.i(TAG, "Lost focus (transient)");
+                    Log.i(TAG, "Lost focus");
                     stateWhenLostFocus = getState();
                     pause();
                     break;
