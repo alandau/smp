@@ -56,7 +56,14 @@
             android:defaultValue="false"/>
         <CheckBoxPreference
             android:key="pref_underscore"
-            android:title="Replace undersores with spaces"
+            android:title="Replace underscores with spaces"
             android:defaultValue="true"/>
+        <ListPreference
+            android:key="pref_assumedEncoding"
+            android:title="Encoding for non-unicode filenames/titles"
+            android:summary="%s"
+            android:entries="@array/pref_encodings_entries"
+            android:entryValues="@array/pref_encodings_values"
+            android:defaultValue="windows-1251"/>
     </PreferenceCategory>
 </PreferenceScreen>

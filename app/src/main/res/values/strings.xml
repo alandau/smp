@@ -78,4 +78,26 @@
         <item>5</item>
         <item>10</item>
     </string-array>
+    <string-array name="pref_encodings_entries">
+        <item>Windows-1250 (Latin 2 / Central European)</item>
+        <item>Windows-1251 (Cyrillic)</item>
+        <item>Windows-1252 (Latin 1 / Western European)</item>
+        <item>Windows-1253 (Greek)</item>
+        <item>Windows-1254 (Turkish)</item>
+        <item>Windows-1255 (Hebrew)</item>
+        <item>Windows-1256 (Arabic)</item>
+        <item>Windows-1257 (Baltic)</item>
+        <item>Windows-1258 (Vietnamese)</item>
+    </string-array>
+    <string-array name="pref_encodings_values">
+        <item>windows-1250</item>
+        <item>windows-1251</item>
+        <item>windows-1252</item>
+        <item>windows-1253</item>
+        <item>windows-1254</item>
+        <item>windows-1255</item>
+        <item>windows-1256</item>
+        <item>windows-1257</item>
+        <item>windows-1258</item>
+    </string-array>
 </resources>

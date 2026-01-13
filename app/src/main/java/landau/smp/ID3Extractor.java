@@ -20,13 +20,14 @@ public class ID3Extractor {
     private final String filename;
     private String artist, album, title;
 
-    private static final CharsetDecoder userDecoder = Charset.forName("windows-1251").newDecoder();
+    private final CharsetDecoder userDecoder;
     private static final CharsetDecoder utf8Decoder = StandardCharsets.UTF_8.newDecoder();
     private static final CharsetDecoder utf16BeDecoder = StandardCharsets.UTF_16BE.newDecoder();
     private static final CharsetDecoder utf16BomDecoder = StandardCharsets.UTF_16.newDecoder();
 
-    public ID3Extractor(String filename) {
+    public ID3Extractor(String filename, CharsetDecoder userDecoder) {
         this.filename = filename;
+        this.userDecoder = userDecoder;
     }
 
     public String getAlbum() {

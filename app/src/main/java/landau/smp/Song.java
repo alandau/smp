@@ -19,10 +19,11 @@ public class Song {
     private int durationMs;
 
     private static final CharsetEncoder encoder = Charset.forName("windows-1252").newEncoder();
-    private static final CharsetDecoder decoder = Charset.forName("windows-1251").newDecoder();
+    private final CharsetDecoder decoder;
 
-    public Song(String filename) {
+    public Song(String filename, CharsetDecoder assumedDecoder) {
         this.filename = filename;
+        this.decoder = assumedDecoder;
     }
 
     public void extractMetadata() {
@@ -30,7 +31,7 @@ public class Song {
             return;
         }
 
-        ID3Extractor id3Extractor = new ID3Extractor(filename);
+        ID3Extractor id3Extractor = new ID3Extractor(filename, decoder);
         id3Extractor.extractMetadata();
         artist = id3Extractor.getArtist();
         album = id3Extractor.getAlbum();

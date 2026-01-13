@@ -31,6 +31,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -279,10 +281,12 @@ public class SMPActivity extends Activity {
 
 
     private void getSongListImpl(List<Song> result, File root) {
+        String assumedEncoding = prefs.getString("pref_assumedEncoding", "windows-1251");
+        CharsetDecoder decoder = Charset.forName(assumedEncoding).newDecoder();
         File[] files = root.listFiles();
         if (files == null) {
             if (!root.isDirectory()) {
-                result.add(new Song(root.getAbsolutePath()));
+                result.add(new Song(root.getAbsolutePath(), decoder));
             }
             return;
         }
@@ -290,7 +294,7 @@ public class SMPActivity extends Activity {
             if (f.isDirectory()) {
                 getSongListImpl(result, f);
             } else {
-                result.add(new Song(f.getAbsolutePath()));
+                result.add(new Song(f.getAbsolutePath(), decoder));
             }
         }
     }
@@ -513,10 +517,10 @@ public class SMPActivity extends Activity {
             }
             dialog.dismiss();
             new AlertDialog.Builder(this)
-                    .setTitle("Delete from recent?")
+                    .setTitle("Remove from recent?")
                     .setMessage(recentTitles[position])
                     .setNegativeButton("Cancel", (dlg, which1) -> {})
-                    .setPositiveButton("Delete", (dlg, which1) -> {
+                    .setPositiveButton("Remove", (dlg, which1) -> {
                         recents.remove(position);
                         recents.remove(0);
                         Collections.reverse(recents);
