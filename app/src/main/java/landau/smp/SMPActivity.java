@@ -513,7 +513,7 @@ public class SMPActivity extends Activity {
             }
             dialog.dismiss();
             new AlertDialog.Builder(this)
-                    .setTitle("Delete?")
+                    .setTitle("Delete from recent?")
                     .setMessage(recentTitles[position])
                     .setNegativeButton("Cancel", (dlg, which1) -> {})
                     .setPositiveButton("Delete", (dlg, which1) -> {
