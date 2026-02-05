@@ -62,6 +62,16 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="false" android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true" android:gravity="center_horizontal">
+       <ImageButton
+            android:id="@+id/b1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="4dp"
+            android:background="@android:color/holo_blue_dark"
+            android:onClick="onBtnPlayPause"
+            android:padding="10dp"
+            android:src="@android:drawable/ic_lock_silent_mode_off" />
         <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -90,6 +100,17 @@
                 android:id="@+id/btnNext"
                 android:onClick="onNextClick"
                 android:background="@android:color/holo_blue_dark"/>
+      
+      
+        <ImageButton
+            android:id="@+id/b2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_margin="4dp"
+            android:background="@android:color/holo_blue_dark"
+            android:padding="10dp"
+            android:src="@android:drawable/ic_lock_silent_mode"
+            android:tint="#FFFFFF" />
     </LinearLayout>
 </LinearLayout>
 
