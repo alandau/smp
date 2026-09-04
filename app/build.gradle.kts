@@ -12,8 +12,8 @@ android {
         applicationId = "landau.smp"
         minSdk = 16
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
         resValue("string", "app_name", "Sane Media Player")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
