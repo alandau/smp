@@ -30,7 +30,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
@@ -286,7 +289,24 @@ public class SMPActivity extends Activity {
         File[] files = root.listFiles();
         if (files == null) {
             if (!root.isDirectory()) {
-                result.add(new Song(root.getAbsolutePath(), decoder));
+                if (root.getName().endsWith(".m3u8") || root.getName().endsWith(".m3u")) {
+                    // Get directory containing m3u8 file, that's the root for relative paths
+                    File parent = root.getParentFile();
+                    try (BufferedReader br = new BufferedReader(new FileReader(root))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            line = line.trim();
+                            if (!line.isEmpty() && !line.startsWith("#")) {
+                                File newPath = line.startsWith("/") ? new File(line) : new File(parent, line);
+                                result.add(new Song(newPath.getAbsolutePath(), decoder));
+                            }
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Can't read playlist file: " + root.getAbsolutePath(), e);
+                    }
+                } else {
+                    result.add(new Song(root.getAbsolutePath(), decoder));
+                }
             }
             return;
         }
