@@ -509,6 +509,12 @@ public class SMPService extends Service {
         if (mediaPlayer == null) {
             return;
         }
+        if (currentSong >= songList.size()) {
+            // This can happen when the only file in songList is deleted while the player is not running,
+            // then player is opened (Select file shown) and another file is opened. Avoid trying to save
+            // position of old file (currentSong=0) in empty songList.
+            return;
+        }
         if (mediaPlayer.getDuration() >= minLength * 1000) {
             SharedPreferences.Editor editor = prefs.edit();
             int curPos = mediaPlayer.getCurrentPosition();
